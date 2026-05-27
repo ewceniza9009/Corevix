@@ -1,0 +1,7 @@
+{
+  "name": "CorevixMobileBanking",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

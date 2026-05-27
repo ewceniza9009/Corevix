@@ -1,0 +1,24 @@
+<Solution>
+  <Folder Name="/Api/">
+    <Project Path="Api/Corevix.Api.csproj" />
+  </Folder>
+  <Folder Name="/Backend/" />
+  <Folder Name="/Backend/Application/">
+    <Project Path="Backend/Application/Corevix.Application.csproj" />
+  </Folder>
+  <Folder Name="/Backend/Core/">
+    <Project Path="Backend/Core/Corevix.Core.csproj" />
+  </Folder>
+  <Folder Name="/Backend/Infrastructure/">
+    <Project Path="Backend/Infrastructure/Corevix.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Backend/Persistence/">
+    <Project Path="Backend/Persistence/Corevix.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/Backend/Tests/">
+    <Project Path="Backend/Tests/Corevix.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Common/">
+    <Project Path="Common/Corevix.Common.csproj" />
+  </Folder>
+</Solution>
