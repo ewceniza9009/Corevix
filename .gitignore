@@ -1,7 +1,7 @@
 # Git ignore rules for Corevix Workspace
 
 # Untracked Folder for private markdown files
-untracked/
+UNTRACKED/
 
 # IDE / Editor folders
 .vscode/
