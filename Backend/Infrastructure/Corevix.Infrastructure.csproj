@@ -2,10 +2,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Application\Corevix.Application.csproj" />
+    <ProjectReference Include="..\Persistence\Corevix.Persistence.csproj" />
     <ProjectReference Include="..\..\Common\Corevix.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Polly" Version="8.6.6" />
     <PackageReference Include="StackExchange.Redis" Version="2.13.17" />
   </ItemGroup>
 

@@ -54,6 +54,9 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "port": 31710
+          },
           "configurations": {
             "production": {
               "buildTarget": "CorevixCorporatePortal:build:production"

@@ -2,73 +2,96 @@ using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Serilog;
+using FluentValidation;
 using Corevix.Common;
 using Corevix.Infrastructure;
 using Corevix.Persistence;
 using Corevix.Application;
 using Corevix.Api.Middleware;
 using Corevix.Api.Hubs;
+using Corevix.Api.Endpoints;
 using MediatR;
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Add CORS
+builder.Host.UseSerilog();
+
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DefaultCorsPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:4200", "http://localhost:8100", "https://localhost:4200", "https://localhost:8100")
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
     });
 });
 
-// 2. Add IHttpContextAccessor & Tenant Provider
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantProvider, TenantProvider>();
-
-// 3. Add Entity Framework Core with Tenant and Audit Interceptor
 builder.Services.AddScoped<TenantAndAuditSaveChangesInterceptor>();
+
+var pgConnectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? throw new InvalidOperationException("PostgreSQL connection string not configured.");
+
 builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
 {
     var interceptor = sp.GetRequiredService<TenantAndAuditSaveChangesInterceptor>();
-    options.UseNpgsql("Host=localhost;Port=5432;Database=corevix_db;Username=postgres;Password=postgres")
+    options.UseNpgsql(pgConnectionString)
            .AddInterceptors(interceptor);
 });
+builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
 
-// 4. Add Redis Caching
+var mongoConnectionString = builder.Configuration["MongoDb:ConnectionString"] 
+    ?? throw new InvalidOperationException("MongoDB connection string not configured.");
+var mongoDbName = builder.Configuration["MongoDb:DatabaseName"] ?? "corevix_auditing";
+
+builder.Services.AddSingleton<MongoDbContext>(sp =>
+    new MongoDbContext(mongoConnectionString, mongoDbName));
+
+var redisConnectionString = builder.Configuration["Redis:ConnectionString"] ?? "localhost:31779";
+
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-    ConnectionMultiplexer.Connect("localhost:6379"));
+    ConnectionMultiplexer.Connect(redisConnectionString));
 builder.Services.AddScoped<ICacheService, RedisCacheService>();
+builder.Services.AddScoped<IComplianceScreeningService, Corevix.Infrastructure.MockComplianceScreeningService>();
+builder.Services.AddScoped<IAuditLogService, Corevix.Infrastructure.MongoAuditLogService>();
 
-// 5. Add MediatR & Pipeline Behaviors
+builder.Services.AddValidatorsFromAssembly(typeof(ICacheService).Assembly);
+
 builder.Services.AddMediatR(cfg =>
 {
-    cfg.RegisterServicesFromAssembly(typeof(ICacheService).Assembly); // Registers from Application assembly (where ICacheService resides)
+    cfg.RegisterServicesFromAssembly(typeof(ICacheService).Assembly);
+    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+    cfg.AddOpenBehavior(typeof(TransactionLimitBehavior<,>));
+    cfg.AddOpenBehavior(typeof(FraudDetectionBehavior<,>));
     cfg.AddOpenBehavior(typeof(IdempotencyBehavior<,>));
 });
 
-// 6. Add Hangfire Background Jobs
 builder.Services.AddHangfire(config =>
     config.UsePostgreSqlStorage(options =>
-        options.UseNpgsqlConnection("Host=localhost;Port=5432;Database=corevix_db;Username=postgres;Password=postgres")));
+        options.UseNpgsqlConnection(pgConnectionString)));
 builder.Services.AddHangfireServer();
 
-// 7. Add SignalR
+builder.Services.AddScoped<OutboxProcessor>();
+
 builder.Services.AddSignalR();
 
-// 8. OpenAPI & Health Checks
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 
-// 9. Exception Handling
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
@@ -78,7 +101,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Basic Security Headers Middleware
 app.Use(async (context, next) =>
 {
     context.Response.Headers.Append("X-Frame-Options", "DENY");
@@ -91,14 +113,34 @@ app.Use(async (context, next) =>
 
 app.UseCors("DefaultCorsPolicy");
 
-// Map Endpoints
 app.MapGet("/", () => new { Message = "Welcome to Corevix Banking API", Status = "Healthy", Version = "1.0.0" });
 app.MapHealthChecks("/health");
 
-// Map Real-time SignalR Hubs
 app.MapHub<NotificationHub>("/hubs/notifications");
 
-// Map Hangfire Dashboard (Basic local or dev mode availability)
 app.MapHangfireDashboard("/hangfire");
+
+app.MapCustomerEndpoints();
+app.MapAccountEndpoints();
+app.MapTransactionEndpoints();
+app.MapComplianceEndpoints();
+
+
+using (var scope = app.Services.CreateScope())
+{
+    var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    
+    recurringJobManager.AddOrUpdate<OutboxProcessor>(
+        "OutboxMessageProcessor",
+        processor => processor.ProcessPendingMessagesAsync(),
+        "*/5 * * * * *"
+    );
+
+    recurringJobManager.AddOrUpdate<InterestCalculationJob>(
+        "InterestCalculationProcessor",
+        job => job.AccrueDailyInterestAsync(),
+        Cron.Daily
+    );
+}
 
 app.Run();
