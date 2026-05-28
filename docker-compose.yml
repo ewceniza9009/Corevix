@@ -1,15 +1,38 @@
+name: corevix
+
 services:
-  corevix-all-in-one:
-    build: .
-    container_name: corevix-all-in-one
+  postgres:
+    image: postgres:17-alpine
+    container_name: corevix-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: corevix_db
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mongodb:
+    image: mongo:8.0
+    container_name: corevix-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
       - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: corevix-redis
+    ports:
       - "6379:6379"
     volumes:
-      - corevix_postgres_data:/var/lib/postgresql/data
-      - corevix_mongodb_data:/data/db
+      - redis_data:/data
 
 volumes:
-  corevix_postgres_data:
-  corevix_mongodb_data:
+  postgres_data:
+  mongodb_data:
+  redis_data:
