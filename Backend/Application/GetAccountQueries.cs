@@ -15,7 +15,10 @@ namespace Corevix.Application
         decimal Balance,
         string Currency,
         AccountStatus Status,
-        Guid CustomerId);
+        Guid CustomerId,
+        bool IsCardLocked,
+        decimal? LimitOverridePerTransaction,
+        decimal? LimitOverrideDaily);
 
     public record GetAccountDetailsQuery(Guid AccountId) : IRequest<AccountDetailsDto>;
 
@@ -58,7 +61,10 @@ namespace Corevix.Application
                 account.Balance,
                 account.Currency,
                 account.Status,
-                account.CustomerId
+                account.CustomerId,
+                account.IsCardLocked,
+                account.LimitOverridePerTransaction,
+                account.LimitOverrideDaily
             );
 
             await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromMinutes(10));
@@ -103,7 +109,10 @@ namespace Corevix.Application
                 account.Balance,
                 account.Currency,
                 account.Status,
-                account.CustomerId
+                account.CustomerId,
+                account.IsCardLocked,
+                account.LimitOverridePerTransaction,
+                account.LimitOverrideDaily
             );
 
             await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromMinutes(10));

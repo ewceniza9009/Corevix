@@ -1,54 +1,132 @@
 @import "tailwindcss";
-
-@theme {
-  --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-border: var(--border);
-}
+@custom-variant dark (&:where(.dark, .dark *));
+@source "./**/*.{html,ts}";
 
 :root {
-  --primary: #0d6e67; /* Elegant Greenish Teal */
-  --primary-hover: #0a544f; /* Darker Greenish Teal */
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --border: #e2e8f0;
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(226, 232, 240, 0.8);
-  --glass-blur: blur(16px);
+  --color-primary: #025864;
+  --color-primary-hover: #013f47;
+  --color-accent: #00d47e;
+  --color-background: #ebeff2;
+  --color-foreground: #0f1e21;
+  --color-card: #ffffff;
+  --color-border: #e2e7ec;
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: #e2e7ec;
+  --glass-blur: blur(12px);
+  --card-shadow: 0 4px 20px -2px rgba(15, 30, 33, 0.05), 0 1px 3px rgba(15, 30, 33, 0.02);
 }
 
 .dark {
-  --primary: #14b8a6; /* Vibrant Teal */
-  --primary-hover: #2dd4bf; /* Minty Teal */
-  --background: #080c14; /* Deep Obsidian */
-  --foreground: #f8fafc;
-  --card: #0f172a; /* Dark Card Slate */
-  --border: #1e293b;
-  --glass-bg: rgba(15, 23, 42, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --color-primary: #00d47e;
+  --color-primary-hover: #00b068;
+  --color-accent: #025864;
+  --color-background: #081012;
+  --color-foreground: #e6f3f5;
+  --color-card: #0c181a;
+  --color-border: #14272b;
+  --glass-bg: rgba(12, 24, 26, 0.8);
+  --glass-border: #14272b;
   --glass-blur: blur(20px);
+  --card-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+}
+
+@theme {
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-foreground);
+  --color-card: var(--color-card);
+  --color-border: var(--color-border);
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  position: relative;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   margin: 0;
+  min-h-screen: 100vh;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.glass-card {
+/* Background Glowing Orbs for Sequence Dashboard Look & Feel */
+body::before, body::after {
+  content: "";
+  position: fixed;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -10;
+  filter: blur(120px);
+  opacity: 0.22;
+  transition: opacity 0.5s ease, background 0.5s ease;
+}
+
+body::before {
+  top: -10%;
+  left: 15%;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.6) 0%, rgba(99, 102, 241, 0.4) 100%);
+}
+
+body::after {
+  bottom: 5%;
+  right: 10%;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.5) 0%, rgba(139, 92, 246, 0.3) 100%);
+}
+
+.dark body::before {
+  opacity: 0.12;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.4) 0%, rgba(79, 70, 229, 0.2) 100%);
+}
+
+.dark body::after {
+  opacity: 0.08;
+  background: radial-gradient(circle, rgba(217, 70, 239, 0.3) 0%, rgba(99, 102, 241, 0.15) 100%);
+}
+
+/* Glowing & Dribbble Utility Classes */
+.glow-card-blue {
+  background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+  box-shadow: 0 20px 40px -15px rgba(99, 102, 241, 0.5);
+}
+
+.glow-card-emerald {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.4);
+}
+
+.glass-panel, .glass-card {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--card-shadow);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.dark .glass-card {
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #04060a;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Custom animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

@@ -10,6 +10,7 @@ UNTRACKED/
 *.user
 *.userosscache
 *.sln.docstates
+.vs/
 
 # OS files
 Thumbs.db
@@ -37,7 +38,7 @@ sysinfo.json
 *.sln.docstates
 
 # Local appsettings / secrets
-appsettings.Development.json
+appsettings.json
 appsettings.local.json
 .env
 .env.*

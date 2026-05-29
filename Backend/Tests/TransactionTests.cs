@@ -75,8 +75,8 @@ namespace Corevix.Tests
             await dbContext.SaveChangesAsync();
 
             // Set initial cache
-            await cacheService.SetAsync($"accounts:{acc1.Id}:details", new AccountDetailsDto(acc1.Id, acc1.AccountNumber, acc1.AccountType, acc1.Balance, acc1.Currency, acc1.Status, customer.Id));
-            await cacheService.SetAsync($"accounts:{acc2.Id}:details", new AccountDetailsDto(acc2.Id, acc2.AccountNumber, acc2.AccountType, acc2.Balance, acc2.Currency, acc2.Status, customer.Id));
+            await cacheService.SetAsync($"accounts:{acc1.Id}:details", new AccountDetailsDto(acc1.Id, acc1.AccountNumber, acc1.AccountType, acc1.Balance, acc1.Currency, acc1.Status, customer.Id, false, null, null));
+            await cacheService.SetAsync($"accounts:{acc2.Id}:details", new AccountDetailsDto(acc2.Id, acc2.AccountNumber, acc2.AccountType, acc2.Balance, acc2.Currency, acc2.Status, customer.Id, false, null, null));
 
             var handler = new TransferCommandHandler(dbContext, cacheService);
             var command = new TransferCommand(

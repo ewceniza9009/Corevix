@@ -23,7 +23,7 @@ namespace Corevix.Infrastructure
         public TokenResponse GenerateTokens(User user)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                _configuration["Jwt:Secret"] ?? "SuperSecretKeyThatIsAtLeast64BytesLongForHmacSha512SigningSecurityPurposes!"
+                _configuration["Jwt:SecretKey"] ?? _configuration["Jwt:Secret"] ?? "SuperSecretKeyThatIsAtLeast64BytesLongForHmacSha512SigningSecurityPurposes!"
             ));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
 
@@ -66,7 +66,7 @@ namespace Corevix.Infrastructure
                 ValidateIssuer = true,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                    _configuration["Jwt:Secret"] ?? "SuperSecretKeyThatIsAtLeast64BytesLongForHmacSha512SigningSecurityPurposes!"
+                    _configuration["Jwt:SecretKey"] ?? _configuration["Jwt:Secret"] ?? "SuperSecretKeyThatIsAtLeast64BytesLongForHmacSha512SigningSecurityPurposes!"
                 )),
                 ValidateLifetime = false,
                 ValidIssuer = _configuration["Jwt:Issuer"] ?? "CorevixBank",

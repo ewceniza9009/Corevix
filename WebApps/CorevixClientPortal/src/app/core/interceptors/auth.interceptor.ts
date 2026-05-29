@@ -8,7 +8,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = authService.getAccessToken();
 
   let authReq = req;
-  if (token) {
+  const isPublicRoute = req.url.includes('/auth/login') || req.url.includes('/auth/refresh') || req.url.includes('/customers/register');
+  
+  if (token && !isPublicRoute) {
     authReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`
@@ -33,7 +35,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return next(retryReq);
           }),
           catchError((refreshErr) => {
-            authService.logout();
+            if (refreshErr.status === 401 || refreshErr.status === 400) {
+              authService.logout();
+            }
             return throwError(() => refreshErr);
           })
         );

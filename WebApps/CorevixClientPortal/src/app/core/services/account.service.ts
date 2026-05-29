@@ -11,7 +11,9 @@ export interface AccountDetailsDto {
   currency: string;
   status: number;
   customerId: string;
-  isCardLocked?: boolean;
+  isCardLocked: boolean;
+  limitOverridePerTransaction: number | null;
+  limitOverrideDaily: number | null;
 }
 
 export interface TransactionDto {

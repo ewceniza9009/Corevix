@@ -61,7 +61,9 @@ export class AuthService {
         localStorage.setItem('refreshToken', res.refreshToken);
       }),
       catchError(err => {
-        this.logout();
+        if (err.status === 400 || err.status === 401) {
+          this.logout();
+        }
         return throwError(() => err);
       })
     );

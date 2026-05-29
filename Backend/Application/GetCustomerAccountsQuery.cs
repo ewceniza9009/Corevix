@@ -32,7 +32,10 @@ namespace Corevix.Application
                     account.Balance,
                     account.Currency,
                     account.Status,
-                    account.CustomerId
+                    account.CustomerId,
+                    account.IsCardLocked,
+                    account.LimitOverridePerTransaction,
+                    account.LimitOverrideDaily
                 ))
                 .ToListAsync(cancellationToken);
 
