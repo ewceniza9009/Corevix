@@ -120,7 +120,7 @@ import { ThemeService } from '../../core/services/theme.service';
         </header>
 
         <!-- Main Content Area -->
-        <main class="flex-1 p-8 overflow-y-auto glass-panel rounded-[2rem] transition-colors duration-300">
+        <main class="flex-1 p-8 overflow-y-auto bg-transparent rounded-[2rem] transition-colors duration-300">
           <router-outlet></router-outlet>
         </main>
       </div>
