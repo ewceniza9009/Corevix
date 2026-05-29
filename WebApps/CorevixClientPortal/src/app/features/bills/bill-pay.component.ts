@@ -11,33 +11,35 @@ import { AccountService, AccountDetailsDto } from '../../core/services/account.s
   template: `
     <div class="max-w-2xl mx-auto space-y-6">
       <div class="text-left mb-4">
-        <h2 class="text-3xl font-extrabold text-white">Bill Payments</h2>
-        <p class="text-sm text-foreground opacity-70">Execute instant fee settlements for local utilities and telecommunications</p>
+        <h2 class="text-3xl font-extrabold text-foreground">Bill Payments</h2>
+        <p class="text-sm text-foreground/60 mt-1">Execute instant fee settlements for local utilities and telecommunications</p>
       </div>
 
       <div class="glass-card p-6 border border-border/40 rounded-2xl">
-        <h3 class="text-lg font-bold text-white mb-4">Pay a Biller</h3>
+        <h3 class="text-lg font-bold text-foreground mb-4">Pay a Biller</h3>
 
         @if (errorMessage()) {
-          <div class="p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-xs mb-4">
-            ⚠️ {{ errorMessage() }}
+          <div class="alert alert-error mb-4">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            {{ errorMessage() }}
           </div>
         }
 
         @if (successMessage()) {
-          <div class="p-3 bg-primary/10 border border-primary/20 text-primary rounded-lg text-xs mb-4">
-            🎉 {{ successMessage() }}
+          <div class="alert alert-success mb-4">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            {{ successMessage() }}
           </div>
         }
 
         <form (ngSubmit)="handleBillPay()" class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80">Select Source Account</label>
+            <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-foreground/60">Select Source Account</label>
             <select
               [(ngModel)]="accountId"
               name="sourceAccount"
               required
-              class="w-full px-3 py-2 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition text-sm"
+              class="w-full h-10 px-3 border border-border rounded-xl bg-card text-foreground text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
             >
               @for (acc of accounts(); track acc.id) {
                 <option [value]="acc.id">{{ acc.accountNumber }} - {{ acc.balance | currency:'PHP':'symbol' }}</option>
@@ -46,12 +48,12 @@ import { AccountService, AccountDetailsDto } from '../../core/services/account.s
           </div>
 
           <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80">Select Utility Biller</label>
+            <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-foreground/60">Select Utility Biller</label>
             <select
               name="biller"
               [(ngModel)]="billerCode"
               required
-              class="w-full px-3 py-2 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition text-sm"
+              class="w-full h-10 px-3 border border-border rounded-xl bg-card text-foreground text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
             >
               <option value="MERALCO">Meralco (Electricity)</option>
               <option value="MAYNILAD">Maynilad Water Services</option>
@@ -63,19 +65,19 @@ import { AccountService, AccountDetailsDto } from '../../core/services/account.s
           </div>
 
           <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80">Account / Reference Number</label>
+            <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-foreground/60">Account / Reference Number</label>
             <input
               type="text"
               name="referenceNumber"
               [(ngModel)]="referenceNumber"
               placeholder="e.g. 10-digit customer account number"
               required
-              class="w-full px-3 py-2 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition text-sm"
+              class="w-full h-10 px-3 border border-border rounded-xl bg-card text-foreground text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
             />
           </div>
 
           <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80">Payment Amount (₱)</label>
+            <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-foreground/60">Payment Amount (₱)</label>
             <input
               type="number"
               name="amount"
@@ -83,15 +85,16 @@ import { AccountService, AccountDetailsDto } from '../../core/services/account.s
               placeholder="0.00"
               required
               min="1"
-              class="w-full px-3 py-2 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition text-sm"
+              class="w-full h-10 px-3 border border-border rounded-xl bg-card text-foreground text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
             />
           </div>
 
           <button
             type="submit"
             [disabled]="isLoading() || !accountId || !billerCode || !referenceNumber || amount <= 0"
-            class="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover transition disabled:opacity-50 text-sm shadow-lg shadow-primary/20"
+            class="btn btn-primary btn-block"
           >
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             {{ isLoading() ? 'Processing Payment...' : 'Confirm Bill Payment' }}
           </button>
         </form>

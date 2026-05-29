@@ -13,20 +13,22 @@ import { AuthService } from '../../core/services/auth.service';
     <div class="space-y-8 max-w-4xl mx-auto">
       <div class="flex justify-between items-center">
         <div>
-          <h2 class="text-3xl font-extrabold tracking-tight text-primary">Fund Transfer</h2>
-          <p class="text-sm opacity-70 mt-1">Move money instantly between your accounts or to other Corevix users</p>
+          <h2 class="text-3xl font-extrabold text-foreground">Fund Transfer</h2>
+          <p class="text-sm text-foreground/60 mt-1">Move money instantly between your accounts or to other Corevix users</p>
         </div>
       </div>
 
       @if (errorMessage()) {
-        <div class="p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-xs font-semibold flex items-center gap-2">
-          <span>⚠️</span> {{ errorMessage() }}
+        <div class="alert alert-error">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          {{ errorMessage() }}
         </div>
       }
 
       @if (successMessage()) {
-        <div class="p-4 bg-primary/10 border border-primary/20 text-primary rounded-lg text-sm font-semibold text-center">
-          🎉 {{ successMessage() }}
+        <div class="alert alert-success">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          {{ successMessage() }}
         </div>
       }
 
@@ -37,12 +39,12 @@ import { AuthService } from '../../core/services/auth.service';
             <form (ngSubmit)="handleTransfer()" class="space-y-6">
               <!-- Source Account -->
               <div>
-                <label class="block text-xs font-semibold uppercase tracking-wider mb-2 opacity-80">Source Account</label>
+                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-foreground/60">Source Account</label>
                 <select
                   name="sourceAccountId"
                   [(ngModel)]="sourceAccountId"
                   required
-                  class="w-full px-3 py-2.5 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition text-sm"
+                  class="w-full h-10 px-3 border border-border rounded-xl bg-card text-foreground text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 >
                   <option value="" disabled>Select an account</option>
                   @for (acc of accounts(); track acc.id) {
@@ -55,22 +57,24 @@ import { AuthService } from '../../core/services/auth.service';
 
               <!-- Transfer Type -->
               <div>
-                <label class="block text-xs font-semibold uppercase tracking-wider mb-2 opacity-80">Destination Type</label>
+                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-foreground/60">Destination Type</label>
                 <div class="grid grid-cols-2 gap-4">
                   <button
                     type="button"
                     (click)="transferType.set('internal')"
-                    [class]="transferType() === 'internal' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background/30 opacity-70'"
-                    class="py-3 border rounded-xl font-semibold text-sm transition text-center hover:opacity-100"
+                    [class]="transferType() === 'internal' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background/30 text-foreground/60'"
+                    class="btn btn-block justify-center"
                   >
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
                     Between My Accounts
                   </button>
                   <button
                     type="button"
                     (click)="transferType.set('external')"
-                    [class]="transferType() === 'external' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background/30 opacity-70'"
-                    class="py-3 border rounded-xl font-semibold text-sm transition text-center hover:opacity-100"
+                    [class]="transferType() === 'external' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background/30 text-foreground/60'"
+                    class="btn btn-block justify-center"
                   >
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
                     To Another Account
                   </button>
                 </div>
@@ -79,12 +83,12 @@ import { AuthService } from '../../core/services/auth.service';
               <!-- Destination Account -->
               @if (transferType() === 'internal') {
                 <div>
-                  <label class="block text-xs font-semibold uppercase tracking-wider mb-2 opacity-80">Destination Account</label>
+                  <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-foreground/60">Destination Account</label>
                   <select
                     name="destAccountId"
                     [(ngModel)]="destAccountId"
                     required
-                    class="w-full px-3 py-2.5 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition text-sm"
+                    class="w-full h-10 px-3 border border-border rounded-xl bg-card text-foreground text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   >
                     <option value="" disabled>Select target account</option>
                     @for (acc of accounts(); track acc.id) {
@@ -98,21 +102,21 @@ import { AuthService } from '../../core/services/auth.service';
                 </div>
               } @else {
                 <div>
-                  <label class="block text-xs font-semibold uppercase tracking-wider mb-2 opacity-80">Destination Account Number</label>
+                  <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-foreground/60">Destination Account Number</label>
                   <input
                     type="text"
                     name="destAccountNumber"
                     [(ngModel)]="destAccountNumber"
                     required
                     placeholder="Enter 12-digit Corevix account number"
-                    class="w-full px-3 py-2.5 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition text-sm"
+                    class="w-full h-10 px-3 border border-border rounded-xl bg-card text-foreground text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                 </div>
               }
 
               <!-- Amount -->
               <div>
-                <label class="block text-xs font-semibold uppercase tracking-wider mb-2 opacity-80">Amount (₱)</label>
+                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-foreground/60">Amount (₱)</label>
                 <input
                   type="number"
                   name="amount"
@@ -120,28 +124,29 @@ import { AuthService } from '../../core/services/auth.service';
                   required
                   min="1"
                   placeholder="0.00"
-                  class="w-full px-3 py-2.5 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition text-sm"
+                  class="w-full h-10 px-3 border border-border rounded-xl bg-card text-foreground text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />
               </div>
 
               <!-- Description -->
               <div>
-                <label class="block text-xs font-semibold uppercase tracking-wider mb-2 opacity-80">Description</label>
+                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-foreground/60">Description</label>
                 <input
                   type="text"
                   name="description"
                   [(ngModel)]="description"
                   required
                   placeholder="Purpose of transfer"
-                  class="w-full px-3 py-2.5 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition text-sm"
+                  class="w-full h-10 px-3 border border-border rounded-xl bg-card text-foreground text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />
               </div>
 
               <button
                 type="submit"
                 [disabled]="isLoading() || !sourceAccountId || (transferType() === 'internal' ? !destAccountId : !destAccountNumber) || amount <= 0"
-                class="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20 text-sm"
+                class="btn btn-primary btn-block"
               >
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
                 {{ isLoading() ? 'Processing Transfer...' : 'Execute Transfer' }}
               </button>
             </form>
@@ -151,8 +156,8 @@ import { AuthService } from '../../core/services/auth.service';
         <!-- Details/Limits Sidebar -->
         <div class="space-y-6">
           <div class="glass-card p-6 border border-border/40 rounded-2xl">
-            <h3 class="text-lg font-bold text-white mb-4">Transfer Guidelines</h3>
-            <ul class="space-y-3 text-xs opacity-80">
+            <h3 class="text-lg font-bold text-foreground mb-4">Transfer Guidelines</h3>
+            <ul class="space-y-3 text-xs text-foreground/60">
               <li>• Instapay / PESONet transfers are processed instantly for internal routing.</li>
               <li>• Per-transaction limit for standard accounts is ₱50,000.00.</li>
               <li>• Daily cumulative limits apply based on KYC verification levels.</li>

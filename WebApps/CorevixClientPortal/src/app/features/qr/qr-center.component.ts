@@ -11,21 +11,21 @@ import { AccountService, AccountDetailsDto } from '../../core/services/account.s
   template: `
     <div class="space-y-6">
       <div class="text-left mb-4">
-        <h2 class="text-3xl font-extrabold text-white">QR Payments Hub</h2>
-        <p class="text-sm text-foreground opacity-70">Scan or generate QR codes for instantaneous balance transfers</p>
+        <h2 class="text-3xl font-extrabold text-foreground">QR Payments Hub</h2>
+        <p class="text-sm text-foreground/60 mt-1">Scan or generate QR codes for instantaneous balance transfers</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Generate QR Code -->
         <div class="glass-card p-6 border border-border/40 rounded-2xl flex flex-col items-center justify-center text-center">
-          <h3 class="text-lg font-bold text-white mb-4">My Account QR Code</h3>
+          <h3 class="text-lg font-bold text-foreground mb-4">My Account QR Code</h3>
           
           <div class="w-full mb-4">
-            <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80 text-left">Select Account</label>
+            <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-foreground/60 text-left">Select Account</label>
             <select
               [(ngModel)]="selectedAccountId"
               (change)="onAccountChange()"
-              class="w-full px-3 py-2 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition text-sm"
+              class="w-full h-10 px-3 border border-border rounded-xl bg-card text-foreground text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
             >
               @for (acc of accounts(); track acc.id) {
                 <option [value]="acc.id">{{ acc.accountNumber }} - {{ acc.balance | currency:'PHP':'symbol' }}</option>
@@ -54,28 +54,30 @@ import { AccountService, AccountDetailsDto } from '../../core/services/account.s
 
         <!-- Scan / Pay via QR -->
         <div class="glass-card p-6 border border-border/40 rounded-2xl space-y-4">
-          <h3 class="text-lg font-bold text-white mb-2">Pay via QR Code</h3>
-          <p class="text-xs opacity-75">Paste the QR code string payload to simulate scanning and transfer instantly.</p>
+          <h3 class="text-lg font-bold text-foreground mb-2">Pay via QR Code</h3>
+          <p class="text-xs text-foreground/50">Paste the QR code string payload to simulate scanning and transfer instantly.</p>
 
           @if (errorMessage()) {
-            <div class="p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-xs">
-              ⚠️ {{ errorMessage() }}
+            <div class="alert alert-error">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              {{ errorMessage() }}
             </div>
           }
           @if (successMessage()) {
-            <div class="p-3 bg-primary/10 border border-primary/20 text-primary rounded-lg text-xs">
-              🎉 {{ successMessage() }}
+            <div class="alert alert-success">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              {{ successMessage() }}
             </div>
           }
 
           <form (ngSubmit)="handleQrPay()" class="space-y-4">
             <div>
-              <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80">Select Source Account</label>
+              <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-foreground/60">Select Source Account</label>
               <select
                 [(ngModel)]="sourceAccountId"
                 name="sourceAccount"
                 required
-                class="w-full px-3 py-2 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition text-sm"
+                class="w-full h-10 px-3 border border-border rounded-xl bg-card text-foreground text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
               >
                 @for (acc of accounts(); track acc.id) {
                   <option [value]="acc.id">{{ acc.accountNumber }} - {{ acc.balance | currency:'PHP':'symbol' }}</option>
@@ -84,19 +86,19 @@ import { AccountService, AccountDetailsDto } from '../../core/services/account.s
             </div>
 
             <div>
-              <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80">QR Code Payload / String</label>
+              <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-foreground/60">QR Code Payload / String</label>
               <input
                 type="text"
                 name="qrPayload"
                 [(ngModel)]="qrPayload"
                 placeholder="e.g. CORE-ACC-1024582922"
                 required
-                class="w-full px-3 py-2 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition text-sm"
+                class="w-full h-10 px-3 border border-border rounded-xl bg-card text-foreground text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
               />
             </div>
 
             <div>
-              <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80">Amount to Transfer (₱)</label>
+              <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5 text-foreground/60">Amount to Transfer (₱)</label>
               <input
                 type="number"
                 name="amount"
@@ -104,15 +106,16 @@ import { AccountService, AccountDetailsDto } from '../../core/services/account.s
                 placeholder="0.00"
                 required
                 min="1"
-                class="w-full px-3 py-2 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition text-sm"
+                class="w-full h-10 px-3 border border-border rounded-xl bg-card text-foreground text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
               />
             </div>
 
             <button
               type="submit"
               [disabled]="isLoading() || !sourceAccountId || !qrPayload || amount <= 0"
-              class="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover transition disabled:opacity-50 text-sm shadow-lg shadow-primary/20"
+              class="btn btn-primary btn-block"
             >
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z"/></svg>
               {{ isLoading() ? 'Processing Payment...' : 'Execute QR Payment' }}
             </button>
           </form>
