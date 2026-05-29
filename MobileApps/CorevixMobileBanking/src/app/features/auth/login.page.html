@@ -1,0 +1,61 @@
+<ion-content [fullscreen]="true" class="ion-padding ion-text-center">
+  <div class="login-container">
+    <div class="logo-area">
+      <h1 class="logo-title text-primary">Corevix</h1>
+      <p class="logo-subtitle">Secure Mobile Vault</p>
+    </div>
+
+    <form (ngSubmit)="handleLogin()" class="form-area">
+      @if (errorMessage()) {
+        <div class="error-banner">
+          ⚠️ {{ errorMessage() }}
+        </div>
+      }
+
+      <ion-item lines="none" class="glass-input">
+        <ion-icon name="mail-outline" slot="start" class="opacity-70"></ion-icon>
+        <ion-input
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="Email Address"
+          required
+        ></ion-input>
+      </ion-item>
+
+      <ion-item lines="none" class="glass-input">
+        <ion-icon name="lock-closed-outline" slot="start" class="opacity-70"></ion-icon>
+        <ion-input
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          placeholder="Password"
+          required
+        ></ion-input>
+      </ion-item>
+
+      <ion-button
+        type="submit"
+        expand="block"
+        [disabled]="isLoading()"
+        class="login-btn mt-4"
+      >
+        {{ isLoading() ? 'Signing In...' : 'Unlock Vault' }}
+      </ion-button>
+    </form>
+
+    @if (authService.isBiometricsEnabled()) {
+      <div class="biometric-trigger mt-6" (click)="handleBiometricLogin()">
+        <ion-icon name="finger-print-outline" class="biometric-icon"></ion-icon>
+        <p class="text-xs font-semibold opacity-85 mt-2">Sign in using Biometrics</p>
+      </div>
+    }
+
+    <div class="footer-area mt-8">
+      <ion-button fill="clear" (click)="toggleTheme()" size="small" class="theme-toggle">
+        <ion-icon [name]="themeService.isDarkMode() ? 'sunny-outline' : 'moon-outline'" slot="start"></ion-icon>
+        {{ themeService.isDarkMode() ? 'Light Mode' : 'Dark Mode' }}
+      </ion-button>
+    </div>
+  </div>
+</ion-content>

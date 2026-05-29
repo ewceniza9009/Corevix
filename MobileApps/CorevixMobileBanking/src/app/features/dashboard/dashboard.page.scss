@@ -1,0 +1,56 @@
+.welcome-header {
+  h2 {
+    letter-spacing: -0.02em;
+    margin: 4px 0 0 0;
+  }
+}
+
+.account-card {
+  min-width: 260px;
+  max-width: 280px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  &.active-card {
+    background: linear-gradient(135deg, rgba(0, 77, 77, 0.6) 0%, rgba(0, 128, 128, 0.4) 100%);
+    border-color: var(--ion-color-primary);
+    box-shadow: 0 8px 24px rgba(0, 128, 128, 0.25);
+  }
+}
+
+.cards-carousel {
+  &::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome, Safari and Opera */
+  }
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.error-banner {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.success-banner {
+  background: rgba(0, 128, 128, 0.1);
+  border: 1px solid rgba(0, 128, 128, 0.2);
+  color: var(--ion-color-primary);
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}

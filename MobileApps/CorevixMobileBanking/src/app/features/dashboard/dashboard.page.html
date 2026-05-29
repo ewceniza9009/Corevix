@@ -1,0 +1,150 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-card px-4">
+    <ion-title class="font-extrabold text-primary text-xl">Corevix Mobile</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="toggleTheme()">
+        <ion-icon [name]="themeService.isDarkMode() ? 'sunny-outline' : 'moon-outline'"></ion-icon>
+      </ion-button>
+      <ion-button (click)="handleLogout()">
+        <ion-icon name="log-out-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding bg-background">
+  <!-- Welcome Details -->
+  <div class="welcome-header mb-6">
+    <p class="text-xs opacity-60 uppercase tracking-wider font-semibold">Welcome Back</p>
+    <h2 class="text-2xl font-bold text-white">{{ authService.currentUser() }}</h2>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="error-banner mb-4">
+      ⚠️ {{ errorMessage() }}
+    </div>
+  }
+
+  @if (successMessage()) {
+    <div class="success-banner mb-4">
+      🎉 {{ successMessage() }}
+    </div>
+  }
+
+  <!-- Accounts Card Carousel -->
+  <div class="section-title mb-3">
+    <h3 class="text-sm font-bold uppercase tracking-wider text-zinc-400">My Accounts</h3>
+  </div>
+
+  <div class="cards-carousel flex overflow-x-auto gap-4 pb-4">
+    @for (acc of accounts(); track acc.id) {
+      <div
+        (click)="selectAccount(acc)"
+        [class.active-card]="acc.id === selectedAccount()?.id"
+        class="account-card flex flex-col justify-between p-5 rounded-2xl border"
+      >
+        <div>
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-semibold uppercase opacity-75">{{ getAccountTypeName(acc.accountType) }}</span>
+            <span class="text-[10px] font-mono opacity-60">{{ acc.accountNumber }}</span>
+          </div>
+          <div class="text-2xl font-extrabold mt-3 text-white">₱{{ acc.balance.toFixed(2) }}</div>
+        </div>
+        <div class="flex justify-between items-center text-[10px] opacity-75 mt-4">
+          <span>{{ acc.currency }}</span>
+          <span class="px-2 py-0.5 rounded bg-white/10 uppercase font-bold">
+            {{ acc.status === 0 ? 'Active' : 'Frozen' }}
+          </span>
+        </div>
+      </div>
+    } @empty {
+      <div class="p-6 text-center text-zinc-500 w-full border border-border/20 rounded-2xl bg-card">
+        No accounts registered. Use the client portal to open accounts.
+      </div>
+    }
+  </div>
+
+  <!-- Selected Account Quick Actions & Transactions -->
+  @if (selectedAccount()) {
+    <div class="mt-6 space-y-6">
+      <!-- Simulated Quick Deposit/Withdrawal panel -->
+      <div class="glass-card p-5 border border-border/40 rounded-2xl space-y-4">
+        <h4 class="text-sm font-bold text-white uppercase tracking-wider">Simulated Teller Desk</h4>
+        <p class="text-xs opacity-75">Execute instant mock deposits or ATM cash-out events directly on this wallet.</p>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[10px] uppercase text-zinc-400 mb-1">Simulate Cash In</label>
+            <div class="flex gap-1.5">
+              <input
+                type="number"
+                placeholder="₱"
+                [(ngModel)]="simDepositAmount"
+                class="w-full px-2 py-1.5 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none"
+              />
+              <button
+                (click)="simulateDeposit()"
+                class="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg"
+              >
+                In
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] uppercase text-zinc-400 mb-1">Simulate ATM Out</label>
+            <div class="flex gap-1.5">
+              <input
+                type="number"
+                placeholder="₱"
+                [(ngModel)]="simWithdrawAmount"
+                class="w-full px-2 py-1.5 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none"
+              />
+              <button
+                (click)="simulateWithdrawal()"
+                class="px-3 py-1.5 bg-red-600 text-white text-xs font-bold rounded-lg"
+              >
+                Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Settings -->
+      <div class="glass-card p-5 border border-border/40 rounded-2xl space-y-4">
+        <h4 class="text-sm font-bold text-white uppercase tracking-wider">Security Preferences</h4>
+        
+        <div class="flex justify-between items-center py-1">
+          <div>
+            <span class="text-xs font-bold text-white block">Biometric Sign-In</span>
+            <span class="text-[10px] opacity-70">Use FaceID/TouchID prompt on startup</span>
+          </div>
+          <ion-toggle
+            [checked]="authService.isBiometricsEnabled()"
+            (ionChange)="toggleBiometrics($event)"
+            color="primary"
+          ></ion-toggle>
+        </div>
+      </div>
+
+      <!-- Push Alerts & Activity Log -->
+      <div class="glass-card p-5 border border-border/40 rounded-2xl space-y-4">
+        <h4 class="text-sm font-bold text-white uppercase tracking-wider">Push alerts & activity</h4>
+        <div class="space-y-3">
+          @for (alert of alerts(); track alert.id) {
+            <div class="flex items-start gap-3 py-1.5 border-b border-border/10">
+              <div class="text-sm">🔔</div>
+              <div>
+                <p class="text-xs font-medium text-white">{{ alert.message }}</p>
+                <span class="text-[9px] opacity-60">{{ alert.time }}</span>
+              </div>
+            </div>
+          } @empty {
+            <p class="text-xs text-zinc-500 text-center py-2">No activity alerts recorded today.</p>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</ion-content>

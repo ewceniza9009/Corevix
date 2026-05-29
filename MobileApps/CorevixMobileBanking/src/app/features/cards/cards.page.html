@@ -1,0 +1,126 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-card px-4">
+    <ion-title class="font-extrabold text-primary text-xl">Card Controls</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding bg-background">
+  @if (errorMessage()) {
+    <div class="error-banner mb-4">
+      ⚠️ {{ errorMessage() }}
+    </div>
+  }
+
+  @if (successMessage()) {
+    <div class="success-banner mb-4">
+      🎉 {{ successMessage() }}
+    </div>
+  }
+
+  <div class="space-y-6">
+    <!-- Account Selector -->
+    <div>
+      <label class="block text-[10px] uppercase text-zinc-400 mb-1.5 font-bold">Linked Wallet</label>
+      <select
+        name="selectedAccount"
+        [ngModel]="selectedAccount()"
+        (ngModelChange)="selectAccount($event)"
+        class="w-full px-3 py-2.5 border border-border rounded-xl bg-background text-foreground text-xs focus:outline-none"
+      >
+        @for (acc of accounts(); track acc.id) {
+          <option [ngValue]="acc">
+            {{ getAccountTypeName(acc.accountType) }} - {{ acc.accountNumber }}
+          </option>
+        }
+      </select>
+    </div>
+
+    @if (selectedAccount()) {
+      <!-- Debit Card graphic -->
+      <div class="debit-card-visual relative p-6 rounded-2xl overflow-hidden border shadow-xl flex flex-col justify-between"
+        [class.locked-card]="selectedAccount()?.isCardLocked">
+        <div class="flex justify-between items-start">
+          <div>
+            <h3 class="text-xs uppercase font-extrabold tracking-widest opacity-80">Corevix Debit</h3>
+            <span class="text-[9px] opacity-60">VISA Platinum</span>
+          </div>
+          <div class="text-xl">💳</div>
+        </div>
+
+        <div class="mt-6 mb-2">
+          <p class="font-mono text-lg tracking-widest text-white">
+            **** **** **** {{ selectedAccount()?.accountNumber?.slice(-4) }}
+          </p>
+        </div>
+
+        <div class="flex justify-between items-center text-[10px] uppercase opacity-85">
+          <span>{{ authService.currentUser() }}</span>
+          <span>12/31</span>
+        </div>
+
+        @if (selectedAccount()?.isCardLocked) {
+          <div class="absolute inset-0 bg-zinc-950/80 backdrop-blur-xs flex flex-col items-center justify-center text-center space-y-2 z-10">
+            <ion-icon name="lock-closed-outline" class="text-red-500 text-3xl"></ion-icon>
+            <span class="text-xs font-bold uppercase tracking-wider text-red-500">Card Blocked</span>
+          </div>
+        }
+      </div>
+
+      <!-- Card Lock Toggle -->
+      <div class="glass-card p-5 border border-border/40 rounded-2xl flex justify-between items-center">
+        <div>
+          <span class="text-xs font-bold text-white block">Card Temporary Lock</span>
+          <span class="text-[10px] opacity-70">Prevent all POS and ATM withdrawals</span>
+        </div>
+        <button
+          (click)="toggleCardLock()"
+          [class]="selectedAccount()?.isCardLocked ? 'bg-red-600' : 'bg-primary'"
+          class="px-4 py-1.5 text-xs text-white rounded-lg font-bold transition"
+        >
+          {{ selectedAccount()?.isCardLocked ? 'Unlock Card' : 'Lock Card' }}
+        </button>
+      </div>
+
+      <!-- Limit Adjustments sliders -->
+      <div class="glass-card p-5 border border-border/40 rounded-2xl space-y-4">
+        <h4 class="text-sm font-bold text-white uppercase tracking-wider">Debit Card Limits</h4>
+        
+        <div class="space-y-4">
+          <div>
+            <div class="flex justify-between items-center text-xs mb-1">
+              <span class="opacity-80">POS Transaction Cap</span>
+              <span class="font-bold text-white">₱{{ cardPerTransLimit() | number }}</span>
+            </div>
+            <ion-range
+              [min]="1000"
+              [max]="100000"
+              [step]="1000"
+              [value]="cardPerTransLimit()"
+              (ionInput)="cardPerTransLimit.set($any($event).detail.value)"
+              color="primary"
+            ></ion-range>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center text-xs mb-1">
+              <span class="opacity-80">Daily ATM Withdrawal Limit</span>
+              <span class="font-bold text-white">₱{{ cardDailyLimit() | number }}</span>
+            </div>
+            <ion-range
+              [min]="5000"
+              [max]="200000"
+              [step]="5000"
+              [value]="cardDailyLimit()"
+              (ionInput)="cardDailyLimit.set($any($event).detail.value)"
+              color="primary"
+            ></ion-range>
+          </div>
+
+          <ion-button expand="block" (click)="saveCardLimits()" class="mt-4 font-bold text-xs" style="--border-radius: 12px; height: 42px;">
+            Save limit changes
+          </ion-button>
+        </div>
+      </div>
+    }
+  </div>
+</ion-content>
