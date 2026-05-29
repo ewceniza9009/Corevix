@@ -20,7 +20,7 @@ import { AccountService, AccountDetailsDto, TransactionDto } from '../../core/se
         </div>
         <div class="flex flex-wrap items-center gap-2 text-xs">
           <div class="flex items-center gap-2 px-3 py-2 border border-border bg-card/60 dark:bg-card/30 rounded-xl font-bold text-zinc-500">
-            <span>📅</span>
+            <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             <span>18 Oct 2024 - 18 Nov 2024</span>
           </div>
           <select class="px-3 py-2 border border-border bg-card/60 dark:bg-card/30 rounded-xl font-bold text-zinc-500 focus:outline-none">
@@ -28,11 +28,12 @@ import { AccountService, AccountDetailsDto, TransactionDto } from '../../core/se
             <option>Last 6 months</option>
             <option>All time</option>
           </select>
-          <button (click)="printStatement()" class="px-3.5 py-2 bg-card hover:bg-slate-200/50 dark:hover:bg-zinc-800 border border-border text-zinc-600 dark:text-zinc-300 font-bold rounded-xl transition flex items-center gap-1.5">
-            <span>📤</span> Export
+          <button (click)="printStatement()" class="px-3.5 py-2 bg-card hover:bg-slate-200/50 dark:hover:bg-zinc-800 border border-border text-zinc-600 dark:text-zinc-300 font-extrabold rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+            Export
           </button>
-          <button (click)="loadDashboard()" class="p-2 border border-border bg-card hover:bg-slate-200/50 dark:hover:bg-zinc-800 text-zinc-500 hover:text-foreground rounded-xl transition" title="Refresh Dashboard">
-            <span>🔄</span>
+          <button (click)="loadDashboard()" class="p-2 border border-border bg-card hover:bg-slate-200/50 dark:hover:bg-zinc-800 text-zinc-500 hover:text-foreground rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm flex items-center justify-center" title="Refresh Dashboard">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
           </button>
         </div>
       </div>
@@ -40,13 +41,13 @@ import { AccountService, AccountDetailsDto, TransactionDto } from '../../core/se
       <!-- Quick Action Banners & Errors -->
       @if (errorMessage()) {
         <div class="p-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl text-xs flex items-center gap-2.5">
-          <span>⚠️</span>
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
           <span class="font-bold">{{ errorMessage() }}</span>
         </div>
       }
       @if (successMessage()) {
         <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-xs flex items-center gap-2.5">
-          <span>🎉</span>
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           <span class="font-bold">{{ successMessage() }}</span>
         </div>
       }
@@ -56,11 +57,9 @@ import { AccountService, AccountDetailsDto, TransactionDto } from '../../core/se
         <!-- Abstract tiled decorative pattern -->
         <div class="absolute inset-0 opacity-[0.07] pointer-events-none mix-blend-overlay">
           <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <rect width="32" height="32" rx="6" fill="white" transform="rotate(15 16 16)"/>
-              </pattern>
-            </defs>
+            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <rect width="32" height="32" rx="6" fill="white" transform="rotate(15 16 16)"/>
+            </pattern>
             <rect width="100%" height="100%" fill="url(#grid)"/>
           </svg>
         </div>
@@ -76,20 +75,21 @@ import { AccountService, AccountDetailsDto, TransactionDto } from '../../core/se
         </div>
 
         <div class="flex flex-wrap gap-2 z-10 w-full md:w-auto">
-          <button (click)="showOpenAccountModal.set(true)" class="flex-1 md:flex-none px-4 py-2 bg-[#00D47E] hover:bg-[#00c072] text-[#025864] text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5">
-            <span>+</span> Add
+          <button (click)="showOpenAccountModal.set(true)" class="flex-1 md:flex-none px-4 py-2.5 bg-[#00D47E] hover:bg-[#00e88a] text-[#025864] text-xs font-extrabold rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm hover:shadow-md hover:shadow-[#00D47E]/10 flex items-center justify-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            Add
           </button>
-          <button (click)="showGcashModal.set(true)" class="flex-1 md:flex-none px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5">
-            <span>📱</span> Send
+          <button (click)="showGcashModal.set(true)" class="flex-1 md:flex-none px-4 py-2.5 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 text-white text-xs font-extrabold rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"/></svg>
+            Send
           </button>
-          <button (click)="showGcashModal.set(true)" class="flex-1 md:flex-none px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5">
-            <span>🔄</span> Request
+          <button (click)="showGcashModal.set(true)" class="flex-1 md:flex-none px-4 py-2.5 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 text-white text-xs font-extrabold rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 4.5l-15 15m0 0h11.25m-11.25 0V8.25"/></svg>
+            Request
           </button>
-          <div class="relative">
-            <button (click)="showOpenAccountModal.set(true)" class="p-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-white transition flex items-center justify-center" title="Options">
-              <span>•••</span>
-            </button>
-          </div>
+          <button (click)="showOpenAccountModal.set(true)" class="p-2.5 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 rounded-xl text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center" title="Options">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
+          </button>
         </div>
       </div>
 
@@ -103,7 +103,7 @@ import { AccountService, AccountDetailsDto, TransactionDto } from '../../core/se
           <div class="p-5 bg-card border border-border rounded-3xl space-y-4">
             <div class="flex justify-between items-center">
               <div class="flex items-center gap-2">
-                <span class="text-zinc-400 font-extrabold text-sm">↑↓</span>
+                <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"/></svg>
                 <h3 class="text-sm font-extrabold text-foreground">Cash Flow</h3>
               </div>
               <div class="flex items-center gap-1 bg-slate-100 dark:bg-zinc-900 p-0.5 rounded-lg text-[10px] font-bold">
@@ -169,8 +169,9 @@ import { AccountService, AccountDetailsDto, TransactionDto } from '../../core/se
                 <p class="text-[10px] text-zinc-400 font-medium">Selected Vault: {{ selectedAccount() ? getAccountTypeName(selectedAccount()!.accountType) : '' }} (•••• {{ selectedAccount()?.accountNumber?.slice(-4) }})</p>
               </div>
               <div class="flex gap-2">
-                <button (click)="printStatement()" class="px-3 py-1.5 border border-border text-[10px] font-bold rounded-lg text-zinc-500 hover:text-foreground transition flex items-center gap-1">
-                  🖨️ Export PDF
+                <button (click)="printStatement()" class="px-3 py-1.5 border border-border text-[10px] font-bold rounded-lg text-zinc-500 hover:text-foreground hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.82l2.6-2.6m0 0l2.6 2.6m-2.6-2.6v6.5m-3.9-9.1h8.8c.8 0 1.5.7 1.5 1.5v9.1c0 .8-.7 1.5-1.5 1.5H5.2c-.8 0-1.5-.7-1.5-1.5V7.7c0-.8.7-1.5 1.5-1.5h1.5m3-3h1.5"/></svg>
+                  Export PDF
                 </button>
               </div>
             </div>
@@ -290,8 +291,9 @@ import { AccountService, AccountDetailsDto, TransactionDto } from '../../core/se
                   <input type="number" [(ngModel)]="cardDailyLimit" class="w-full px-2.5 py-1.5 border border-border bg-background rounded-lg text-xs font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
                 </div>
               </div>
-              <button (click)="updateCardLimits()" class="w-full py-2 bg-[#025864] hover:bg-[#013f47] text-white text-[10px] font-bold rounded-lg transition duration-200">
-                Apply Card Limits
+              <button (click)="updateCardLimits()" class="w-full py-2 bg-[#025864] dark:bg-[#00D47E] hover:bg-[#013f47] dark:hover:bg-[#00e88a] text-white dark:text-[#025864] text-[10px] font-extrabold rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] shadow-sm flex items-center justify-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                Apply Limits
               </button>
             </div>
           </div>
@@ -304,14 +306,20 @@ import { AccountService, AccountDetailsDto, TransactionDto } from '../../core/se
                 <label class="text-[9px] font-extrabold text-zinc-400 uppercase tracking-wider block mb-1">Simulate Cashier Deposit</label>
                 <div class="flex gap-2">
                   <input type="number" placeholder="Amount" [(ngModel)]="simDepositAmount" class="w-full px-2.5 py-1.5 border border-border bg-background rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-[#025864]">
-                  <button (click)="simulateDeposit()" class="px-3 py-1.5 bg-[#025864] hover:bg-[#013f47] text-white font-bold rounded-lg transition">Deposit</button>
+                  <button (click)="simulateDeposit()" class="px-3.5 py-1.5 bg-[#00D47E]/10 hover:bg-[#00D47E]/20 text-[#00D47E] border border-[#00D47E]/20 font-bold rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                    Deposit
+                  </button>
                 </div>
               </div>
               <div>
                 <label class="text-[9px] font-extrabold text-zinc-400 uppercase tracking-wider block mb-1">Simulate ATM Withdrawal</label>
                 <div class="flex gap-2">
                   <input type="number" placeholder="Amount" [(ngModel)]="simWithdrawAmount" class="w-full px-2.5 py-1.5 border border-border bg-background rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-red-500">
-                  <button (click)="simulateWithdrawal()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition">Withdraw</button>
+                  <button (click)="simulateWithdrawal()" class="px-3.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 font-bold rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+                    Withdraw
+                  </button>
                 </div>
               </div>
             </div>
@@ -346,8 +354,8 @@ import { AccountService, AccountDetailsDto, TransactionDto } from '../../core/se
               </div>
             </div>
             <div class="flex justify-end gap-2 pt-2 text-xs">
-              <button (click)="showOpenAccountModal.set(false)" class="px-4 py-2 border border-border rounded-xl text-zinc-500 hover:text-foreground transition">Cancel</button>
-              <button (click)="openNewAccount()" class="px-4 py-2 bg-[#025864] text-white font-bold rounded-xl transition">Confirm</button>
+              <button (click)="showOpenAccountModal.set(false)" class="px-4 py-2 border border-border rounded-xl text-zinc-500 hover:text-foreground hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">Cancel</button>
+              <button (click)="openNewAccount()" class="px-4 py-2 bg-[#025864] dark:bg-[#00D47E] hover:bg-[#013f47] dark:hover:bg-[#00e88a] text-white dark:text-[#025864] font-extrabold rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">Confirm</button>
             </div>
           </div>
         </div>
@@ -368,8 +376,8 @@ import { AccountService, AccountDetailsDto, TransactionDto } from '../../core/se
               </div>
             </div>
             <div class="flex justify-end gap-2 pt-2 text-xs">
-              <button (click)="showGcashModal.set(false)" class="px-4 py-2 border border-border rounded-xl text-zinc-500 hover:text-foreground transition">Cancel</button>
-              <button (click)="executeGcashCashIn()" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-xl transition">Top-Up</button>
+              <button (click)="showGcashModal.set(false)" class="px-4 py-2 border border-border rounded-xl text-zinc-500 hover:text-foreground hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">Cancel</button>
+              <button (click)="executeGcashCashIn()" class="px-4 py-2 bg-[#00D47E] hover:bg-[#00e88a] text-[#025864] font-extrabold rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">Top-Up</button>
             </div>
           </div>
         </div>
