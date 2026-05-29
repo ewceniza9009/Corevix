@@ -9,7 +9,7 @@ import { AccountService, AccountDetailsDto, TransactionDto } from '../../core/se
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="space-y-6 animate-fade-in text-foreground relative z-10 font-sans">
+    <div class="space-y-6 animate-fade-in text-foreground relative font-sans">
       <!-- Top Search & Date Filter Bar -->
       <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 pb-4 border-b border-border/20">
         <div class="relative flex-1 max-w-md">
