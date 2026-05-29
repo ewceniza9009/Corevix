@@ -180,4 +180,7 @@ using (var scope = app.Services.CreateScope())
     );
 }
 
+// Run database migrations and apply seed configurations dynamically on host startup
+await DbInitializer.InitializeAsync(app.Services);
+
 app.Run();
