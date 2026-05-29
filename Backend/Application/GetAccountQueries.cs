@@ -19,7 +19,54 @@ namespace Corevix.Application
 
     public record GetAccountDetailsQuery(Guid AccountId) : IRequest<AccountDetailsDto>;
 
+    public record GetAccountByNumberQuery(string AccountNumber) : IRequest<AccountDetailsDto>;
+
     public record GetBalanceQuery(Guid AccountId) : IRequest<decimal>;
+
+    public class GetAccountByNumberQueryHandler : IRequestHandler<GetAccountByNumberQuery, AccountDetailsDto>
+    {
+        private readonly IApplicationDbContext _dbContext;
+        private readonly ICacheService _cacheService;
+
+        public GetAccountByNumberQueryHandler(IApplicationDbContext dbContext, ICacheService cacheService)
+        {
+            _dbContext = dbContext;
+            _cacheService = cacheService;
+        }
+
+        public async Task<AccountDetailsDto> Handle(GetAccountByNumberQuery request, CancellationToken cancellationToken)
+        {
+            var cacheKey = $"accounts:{request.AccountNumber}:details";
+            var cached = await _cacheService.GetAsync<AccountDetailsDto>(cacheKey);
+            if (cached != null)
+            {
+                return cached;
+            }
+
+            var account = await _dbContext.Accounts
+                .FirstOrDefaultAsync(a => a.AccountNumber == request.AccountNumber, cancellationToken);
+
+            if (account == null)
+            {
+                throw new KeyNotFoundException($"Account with number {request.AccountNumber} was not found.");
+            }
+
+            var dto = new AccountDetailsDto(
+                account.Id,
+                account.AccountNumber,
+                account.AccountType,
+                account.Balance,
+                account.Currency,
+                account.Status,
+                account.CustomerId
+            );
+
+            await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromMinutes(10));
+            await _cacheService.SetAsync($"accounts:{account.Id}:details", dto, TimeSpan.FromMinutes(10));
+
+            return dto;
+        }
+    }
 
     public class GetAccountDetailsQueryHandler : IRequestHandler<GetAccountDetailsQuery, AccountDetailsDto>
     {

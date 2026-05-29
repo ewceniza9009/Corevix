@@ -13,6 +13,7 @@ namespace Corevix.Application
         DbSet<LedgerEntry> LedgerEntries { get; }
         DbSet<OutboxMessage> OutboxMessages { get; }
         DbSet<TransactionLimitPolicy> TransactionLimitPolicies { get; }
+        DbSet<User> Users { get; }
         string CurrentTenantId { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }

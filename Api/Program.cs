@@ -12,6 +12,10 @@ using Corevix.Api.Middleware;
 using Corevix.Api.Hubs;
 using Corevix.Api.Endpoints;
 using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Corevix.Application.Security;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -64,6 +68,35 @@ builder.Services.AddScoped<ICacheService, RedisCacheService>();
 builder.Services.AddScoped<IComplianceScreeningService, Corevix.Infrastructure.MockComplianceScreeningService>();
 builder.Services.AddScoped<IAuditLogService, Corevix.Infrastructure.MongoAuditLogService>();
 
+builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
+builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
+
+var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 
+    ?? throw new InvalidOperationException("JWT SecretKey is not configured.");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "CorevixBanking";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "CorevixPortals";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey)),
+        ClockSkew = TimeSpan.Zero
+    };
+});
+builder.Services.AddAuthorization();
+
 builder.Services.AddValidatorsFromAssembly(typeof(ICacheService).Assembly);
 
 builder.Services.AddMediatR(cfg =>
@@ -113,6 +146,9 @@ app.Use(async (context, next) =>
 
 app.UseCors("DefaultCorsPolicy");
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapGet("/", () => new { Message = "Welcome to Corevix Banking API", Status = "Healthy", Version = "1.0.0" });
 app.MapHealthChecks("/health");
 
@@ -124,6 +160,7 @@ app.MapCustomerEndpoints();
 app.MapAccountEndpoints();
 app.MapTransactionEndpoints();
 app.MapComplianceEndpoints();
+app.MapAuthEndpoints();
 
 
 using (var scope = app.Services.CreateScope())

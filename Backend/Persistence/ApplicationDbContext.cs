@@ -24,6 +24,7 @@ namespace Corevix.Persistence
         public DbSet<LedgerEntry> LedgerEntries => Set<LedgerEntry>();
         public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
         public DbSet<TransactionLimitPolicy> TransactionLimitPolicies => Set<TransactionLimitPolicy>();
+        public DbSet<User> Users => Set<User>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -119,6 +120,53 @@ namespace Corevix.Persistence
                         PerTransactionLimit = 500_000m,
                         DailyLimit = 1_000_000m,
                         MonthlyLimit = 5_000_000m
+                    }
+                );
+            });
+
+            // User Configurations & Seed Data
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasIndex(u => new { u.TenantId, u.Email }).IsUnique();
+                
+                entity.HasOne(u => u.Customer)
+                      .WithOne()
+                      .HasForeignKey<User>(u => u.CustomerId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasData(
+                    new User
+                    {
+                        Id = Guid.Parse("b1b2c3d4-0001-0001-0001-000000000001"),
+                        TenantId = "test-tenant-id",
+                        Email = "customer@corevix.com",
+                        PasswordHash = "ioTOiNA1xajElcF13oaTlw7tZfwDsZh4F4xs8qVSbNZDoKZbzClofgM3pZ+Cxgy8S7AoPYZXv94sgbRWoM+0Og==",
+                        PasswordSalt = "zQ3GXoSWAsDn0AztppFN9MtkQa/fvo7xJpB3indueiQ=",
+                        Role = UserRole.Customer,
+                        IsActive = true,
+                        CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                    },
+                    new User
+                    {
+                        Id = Guid.Parse("b1b2c3d4-0001-0001-0001-000000000002"),
+                        TenantId = "test-tenant-id",
+                        Email = "staff@corevix.com",
+                        PasswordHash = "ioTOiNA1xajElcF13oaTlw7tZfwDsZh4F4xs8qVSbNZDoKZbzClofgM3pZ+Cxgy8S7AoPYZXv94sgbRWoM+0Og==",
+                        PasswordSalt = "zQ3GXoSWAsDn0AztppFN9MtkQa/fvo7xJpB3indueiQ=",
+                        Role = UserRole.Staff,
+                        IsActive = true,
+                        CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                    },
+                    new User
+                    {
+                        Id = Guid.Parse("b1b2c3d4-0001-0001-0001-000000000003"),
+                        TenantId = "test-tenant-id",
+                        Email = "approver@corevix.com",
+                        PasswordHash = "ioTOiNA1xajElcF13oaTlw7tZfwDsZh4F4xs8qVSbNZDoKZbzClofgM3pZ+Cxgy8S7AoPYZXv94sgbRWoM+0Og==",
+                        PasswordSalt = "zQ3GXoSWAsDn0AztppFN9MtkQa/fvo7xJpB3indueiQ=",
+                        Role = UserRole.Approver,
+                        IsActive = true,
+                        CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                     }
                 );
             });

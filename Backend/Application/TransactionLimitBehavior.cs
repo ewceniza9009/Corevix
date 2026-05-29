@@ -46,17 +46,15 @@ namespace Corevix.Application
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.AccountType == account.AccountType, cancellationToken);
 
-            if (policy == null)
-            {
-                // No policy configured for this account type; allow
-                return await next();
-            }
+            var perTxLimit = account.LimitOverridePerTransaction ?? policy?.PerTransactionLimit ?? 1_000_000_000m;
+            var dailyLimitCap = account.LimitOverrideDaily ?? policy?.DailyLimit ?? 1_000_000_000m;
+            var monthlyLimitCap = account.LimitOverrideMonthly ?? policy?.MonthlyLimit ?? 1_000_000_000m;
 
             // 1. Per-transaction limit
-            if (financialCommand.Amount > policy.PerTransactionLimit)
+            if (financialCommand.Amount > perTxLimit)
             {
                 throw new InvalidOperationException(
-                    $"Transaction amount ₱{financialCommand.Amount:N2} exceeds the per-transaction limit of ₱{policy.PerTransactionLimit:N2} for {account.AccountType} accounts.");
+                    $"Transaction amount ₱{financialCommand.Amount:N2} exceeds the per-transaction limit of ₱{perTxLimit:N2} for this account.");
             }
 
             // 2. Daily cumulative limit
@@ -68,10 +66,10 @@ namespace Corevix.Application
                          && t.CreatedAt >= todayUtc)
                 .SumAsync(t => t.Amount, cancellationToken);
 
-            if (dailyTotal + financialCommand.Amount > policy.DailyLimit)
+            if (dailyTotal + financialCommand.Amount > dailyLimitCap)
             {
                 throw new InvalidOperationException(
-                    $"This transaction would bring today's total to ₱{(dailyTotal + financialCommand.Amount):N2}, exceeding the daily limit of ₱{policy.DailyLimit:N2}.");
+                    $"This transaction would bring today's total to ₱{(dailyTotal + financialCommand.Amount):N2}, exceeding the daily limit of ₱{dailyLimitCap:N2}.");
             }
 
             // 3. Monthly cumulative limit
@@ -83,10 +81,10 @@ namespace Corevix.Application
                          && t.CreatedAt >= firstOfMonth)
                 .SumAsync(t => t.Amount, cancellationToken);
 
-            if (monthlyTotal + financialCommand.Amount > policy.MonthlyLimit)
+            if (monthlyTotal + financialCommand.Amount > monthlyLimitCap)
             {
                 throw new InvalidOperationException(
-                    $"This transaction would bring this month's total to ₱{(monthlyTotal + financialCommand.Amount):N2}, exceeding the monthly limit of ₱{policy.MonthlyLimit:N2}.");
+                    $"This transaction would bring this month's total to ₱{(monthlyTotal + financialCommand.Amount):N2}, exceeding the monthly limit of ₱{monthlyLimitCap:N2}.");
             }
 
             return await next();

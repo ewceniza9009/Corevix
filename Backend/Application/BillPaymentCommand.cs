@@ -19,18 +19,10 @@ namespace Corevix.Application
 
     public class BillPaymentCommandValidator : AbstractValidator<BillPaymentCommand>
     {
-        private static readonly HashSet<string> ValidBillers = new(StringComparer.OrdinalIgnoreCase)
-        {
-            "MERALCO", "MANILA_WATER", "PLDT", "GLOBE", "SM_DEBT"
-        };
-
         public BillPaymentCommandValidator()
         {
             RuleFor(x => x.SourceAccountId).NotEmpty();
-            RuleFor(x => x.BillerCode)
-                .NotEmpty()
-                .Must(b => ValidBillers.Contains(b))
-                .WithMessage("Unsupported biller code.");
+            RuleFor(x => x.BillerCode).NotEmpty().Matches(@"^[A-Za-z0-9_]{3,15}$");
             RuleFor(x => x.ReferenceNumber).NotEmpty().MinimumLength(6);
             RuleFor(x => x.Amount).GreaterThan(0);
             RuleFor(x => x.IdempotencyKey).NotEmpty();
@@ -41,11 +33,16 @@ namespace Corevix.Application
     {
         private readonly IApplicationDbContext _dbContext;
         private readonly ICacheService _cacheService;
+        private readonly Microsoft.Extensions.Configuration.IConfiguration? _configuration;
 
-        public BillPaymentCommandHandler(IApplicationDbContext dbContext, ICacheService cacheService)
+        public BillPaymentCommandHandler(
+            IApplicationDbContext dbContext,
+            ICacheService cacheService,
+            Microsoft.Extensions.Configuration.IConfiguration? configuration = null)
         {
             _dbContext = dbContext;
             _cacheService = cacheService;
+            _configuration = configuration;
         }
 
         public async Task<Guid> Handle(BillPaymentCommand request, CancellationToken cancellationToken)
@@ -92,6 +89,31 @@ namespace Corevix.Application
                 IsDebit = true
             };
             _dbContext.LedgerEntries.Add(sourceLedger);
+
+            // Calculate Cash Rebate dynamically (default 1.0%)
+            decimal rebateRate = 0.01m;
+            if (_configuration != null)
+            {
+                var val = _configuration["Rebates:BillPayment"];
+                if (decimal.TryParse(val, out var parsed)) rebateRate = parsed;
+            }
+            var rebateAmount = Math.Round(request.Amount * rebateRate, 2);
+            if (rebateAmount > 0)
+            {
+                sourceAccount.Balance += rebateAmount;
+
+                var rebateTx = new Transaction
+                {
+                    ReferenceNumber = $"REB-{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpperInvariant()}",
+                    Amount = rebateAmount,
+                    TransactionType = TransactionType.Deposit,
+                    Status = TransactionStatus.Completed,
+                    DestinationAccountId = sourceAccount.Id,
+                    Description = $"{rebateRate * 100}% Bill Payment Rebate - Biller: {request.BillerCode.ToUpperInvariant()}"
+                };
+                _dbContext.Transactions.Add(rebateTx);
+                _dbContext.LedgerEntries.Add(new LedgerEntry { AccountId = sourceAccount.Id, TransactionId = rebateTx.Id, Amount = rebateAmount, IsDebit = false });
+            }
 
             // Queue Domain Event via Outbox
             var domainEvent = new BillPaymentExecutedEvent(

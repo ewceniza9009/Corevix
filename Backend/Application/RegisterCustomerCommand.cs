@@ -18,7 +18,8 @@ namespace Corevix.Application
         string IdNumber,
         string IdImageUri,
         string SelfieImageUri,
-        string IdempotencyKey) : IRequest<Guid>, IIdempotentCommand;
+        string IdempotencyKey,
+        string Password = "Password123!") : IRequest<Guid>, IIdempotentCommand;
 
     public class RegisterCustomerCommandValidator : AbstractValidator<RegisterCustomerCommand>
     {
@@ -32,6 +33,7 @@ namespace Corevix.Application
             RuleFor(x => x.IdNumber).NotEmpty();
             RuleFor(x => x.IdImageUri).NotEmpty();
             RuleFor(x => x.SelfieImageUri).NotEmpty();
+            RuleFor(x => x.Password).NotEmpty().MinimumLength(6);
         }
     }
 
@@ -40,15 +42,18 @@ namespace Corevix.Application
         private readonly IApplicationDbContext _dbContext;
         private readonly IComplianceScreeningService _complianceService;
         private readonly IAuditLogService _auditLogService;
+        private readonly Security.IPasswordHasher _passwordHasher;
 
         public RegisterCustomerCommandHandler(
             IApplicationDbContext dbContext,
             IComplianceScreeningService complianceService,
-            IAuditLogService auditLogService)
+            IAuditLogService auditLogService,
+            Security.IPasswordHasher? passwordHasher = null)
         {
             _dbContext = dbContext;
             _complianceService = complianceService;
             _auditLogService = auditLogService;
+            _passwordHasher = passwordHasher ?? new Security.PasswordHasher();
         }
 
         public async Task<Guid> Handle(RegisterCustomerCommand request, CancellationToken cancellationToken)
@@ -123,6 +128,19 @@ namespace Corevix.Application
             };
 
             _dbContext.Customers.Add(customer);
+
+            // Create corresponding user account so customer can log in!
+            var (hash, salt) = _passwordHasher.HashPassword(request.Password);
+            var user = new User
+            {
+                Email = request.Email,
+                PasswordHash = hash,
+                PasswordSalt = salt,
+                Role = UserRole.Customer,
+                CustomerId = customer.Id,
+                IsActive = true
+            };
+            _dbContext.Users.Add(user);
 
             var domainEvent = new CustomerRegisteredEvent(
                 customer.Id,

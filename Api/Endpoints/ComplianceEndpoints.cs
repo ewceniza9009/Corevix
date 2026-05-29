@@ -11,7 +11,7 @@ namespace Corevix.Api.Endpoints
     {
         public static void MapComplianceEndpoints(this IEndpointRouteBuilder routes)
         {
-            var group = routes.MapGroup("/compliance");
+            var group = routes.MapGroup("/compliance").RequireAuthorization(policy => policy.RequireRole("Staff", "Approver"));
 
             group.MapGet("/gl-reconciliation", async (IMediator mediator) =>
             {

@@ -10,21 +10,27 @@
 }
 
 :root {
-  --primary: #0f766e; /* Teal 700 - Client portal uses a distinct color scheme (Teal) */
-  --primary-hover: #0d9488; /* Teal 600 */
+  --primary: #0d6e67; /* Elegant Greenish Teal */
+  --primary-hover: #0a544f; /* Darker Greenish Teal */
   --background: #f8fafc;
   --foreground: #0f172a;
   --card: #ffffff;
   --border: #e2e8f0;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(226, 232, 240, 0.8);
+  --glass-blur: blur(16px);
 }
 
 .dark {
-  --primary: #14b8a6; /* Teal 500 */
-  --primary-hover: #2dd4bf; /* Teal 400 */
-  --background: #0b0f19;
-  --foreground: #f1f5f9;
-  --card: #111827;
-  --border: #1f2937;
+  --primary: #14b8a6; /* Vibrant Teal */
+  --primary-hover: #2dd4bf; /* Minty Teal */
+  --background: #080c14; /* Deep Obsidian */
+  --foreground: #f8fafc;
+  --card: #0f172a; /* Dark Card Slate */
+  --border: #1e293b;
+  --glass-bg: rgba(15, 23, 42, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(20px);
 }
 
 body {
@@ -33,4 +39,16 @@ body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   margin: 0;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+}
+
+.dark .glass-card {
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
 }

@@ -111,7 +111,9 @@ namespace Corevix.Application
                 DestinationAccountId = destinationAccountId,
                 Description = request.IsExternal 
                     ? $"{request.Description} (To {request.ExternalBankName} - {request.DestinationAccountNumber})"
-                    : request.Description
+                    : (destinationAccount != null && sourceAccount.BranchCode != destinationAccount.BranchCode)
+                        ? $"Inter-Branch ({sourceAccount.BranchCode} -> {destinationAccount.BranchCode}) | {request.Description}"
+                        : request.Description
             };
 
             _dbContext.Transactions.Add(transaction);

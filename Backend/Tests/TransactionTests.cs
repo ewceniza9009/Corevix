@@ -179,7 +179,7 @@ namespace Corevix.Tests
             var txId = await handler.Handle(command, CancellationToken.None);
 
             var updatedAcc = await dbContext.Accounts.FindAsync(acc.Id);
-            Assert.Equal(850.00m, updatedAcc!.Balance);
+            Assert.Equal(851.50m, updatedAcc!.Balance); // 1000 - 150 + 1.50 (1% rebate)
 
             var ledger = await dbContext.LedgerEntries.SingleAsync(l => l.TransactionId == txId);
             Assert.True(ledger.IsDebit);

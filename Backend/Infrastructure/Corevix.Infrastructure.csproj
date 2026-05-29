@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Polly" Version="8.6.6" />
     <PackageReference Include="StackExchange.Redis" Version="2.13.17" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.18.0" />
   </ItemGroup>
 
   <ItemGroup>

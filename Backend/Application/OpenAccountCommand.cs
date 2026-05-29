@@ -15,7 +15,8 @@ namespace Corevix.Application
         AccountType AccountType,
         decimal InitialDepositAmount,
         string Currency,
-        string IdempotencyKey) : IRequest<Guid>, IIdempotentCommand;
+        string IdempotencyKey,
+        string BranchCode = "0001") : IRequest<Guid>, IIdempotentCommand;
 
     public class OpenAccountCommandValidator : AbstractValidator<OpenAccountCommand>
     {
@@ -58,6 +59,7 @@ namespace Corevix.Application
                 CustomerId = request.CustomerId,
                 AccountType = request.AccountType,
                 AccountNumber = accountNumber,
+                BranchCode = request.BranchCode,
                 Currency = request.Currency,
                 Balance = request.InitialDepositAmount,
                 Status = AccountStatus.Active

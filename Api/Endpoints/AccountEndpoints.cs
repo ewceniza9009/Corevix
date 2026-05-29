@@ -5,6 +5,7 @@ using MediatR;
 using System;
 using System.Threading.Tasks;
 using Corevix.Application;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Corevix.Api.Endpoints
 {
@@ -12,12 +13,18 @@ namespace Corevix.Api.Endpoints
     {
         public static void MapAccountEndpoints(this IEndpointRouteBuilder routes)
         {
-            var group = routes.MapGroup("/accounts");
+            var group = routes.MapGroup("/accounts").RequireAuthorization(policy => policy.RequireRole("Customer", "Staff", "Approver"));
 
             group.MapPost("/", async (OpenAccountCommand command, IMediator mediator) =>
             {
                 var accountId = await mediator.Send(command);
                 return Results.Ok(new { AccountId = accountId });
+            });
+
+            group.MapGet("/search", async ([FromQuery] string number, IMediator mediator) =>
+            {
+                var details = await mediator.Send(new GetAccountByNumberQuery(number));
+                return Results.Ok(details);
             });
 
             group.MapGet("/{id:guid}", async (Guid id, IMediator mediator) =>
