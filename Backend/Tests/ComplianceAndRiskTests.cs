@@ -315,7 +315,6 @@ namespace Corevix.Tests
             await dbContext.SaveChangesAsync();
 
             // 1. Initial deposit of ₱10,000 into acc1
-            var openHandler = new OpenAccountCommandHandler(dbContext);
             // Simulate manually since OpenAccountCommand sets balance directly
             acc1.Balance = 10_000m;
             var depositTx = new Transaction
@@ -328,7 +327,27 @@ namespace Corevix.Tests
                 Description = "Initial Deposit"
             };
             dbContext.Transactions.Add(depositTx);
-            dbContext.LedgerEntries.Add(new LedgerEntry { AccountId = acc1.Id, TransactionId = depositTx.Id, Amount = 10_000m, IsDebit = false });
+            
+            // Debit: Cash Vault
+            dbContext.LedgerEntries.Add(new LedgerEntry 
+            { 
+                AccountId = null, 
+                GlAccountCode = GlAccount.CashVault, 
+                GlAccountName = "Cash Asset (Vault)", 
+                TransactionId = depositTx.Id, 
+                Amount = 10_000m, 
+                IsDebit = true 
+            });
+            // Credit: Customer Savings Deposit
+            dbContext.LedgerEntries.Add(new LedgerEntry 
+            { 
+                AccountId = acc1.Id, 
+                GlAccountCode = GlAccount.SavingsDeposits, 
+                GlAccountName = "Customer Savings Deposits", 
+                TransactionId = depositTx.Id, 
+                Amount = 10_000m, 
+                IsDebit = false 
+            });
 
             // 2. Transfer ₱3,000 from acc1 to acc2
             acc1.Balance -= 3_000m;
@@ -344,8 +363,27 @@ namespace Corevix.Tests
                 Description = "Transfer"
             };
             dbContext.Transactions.Add(transferTx);
-            dbContext.LedgerEntries.Add(new LedgerEntry { AccountId = acc1.Id, TransactionId = transferTx.Id, Amount = 3_000m, IsDebit = true });
-            dbContext.LedgerEntries.Add(new LedgerEntry { AccountId = acc2.Id, TransactionId = transferTx.Id, Amount = 3_000m, IsDebit = false });
+            
+            // Debit: acc1 (Savings)
+            dbContext.LedgerEntries.Add(new LedgerEntry 
+            { 
+                AccountId = acc1.Id, 
+                GlAccountCode = GlAccount.SavingsDeposits, 
+                GlAccountName = "Customer Savings Deposits", 
+                TransactionId = transferTx.Id, 
+                Amount = 3_000m, 
+                IsDebit = true 
+            });
+            // Credit: acc2 (Savings)
+            dbContext.LedgerEntries.Add(new LedgerEntry 
+            { 
+                AccountId = acc2.Id, 
+                GlAccountCode = GlAccount.SavingsDeposits, 
+                GlAccountName = "Customer Savings Deposits", 
+                TransactionId = transferTx.Id, 
+                Amount = 3_000m, 
+                IsDebit = false 
+            });
 
             // 3. Bill payment of ₱1,000 from acc2
             acc2.Balance -= 1_000m;
@@ -359,7 +397,27 @@ namespace Corevix.Tests
                 Description = "Bill Payment"
             };
             dbContext.Transactions.Add(billTx);
-            dbContext.LedgerEntries.Add(new LedgerEntry { AccountId = acc2.Id, TransactionId = billTx.Id, Amount = 1_000m, IsDebit = true });
+            
+            // Debit: acc2 (Savings)
+            dbContext.LedgerEntries.Add(new LedgerEntry 
+            { 
+                AccountId = acc2.Id, 
+                GlAccountCode = GlAccount.SavingsDeposits, 
+                GlAccountName = "Customer Savings Deposits", 
+                TransactionId = billTx.Id, 
+                Amount = 1_000m, 
+                IsDebit = true 
+            });
+            // Credit: Biller Clearing
+            dbContext.LedgerEntries.Add(new LedgerEntry 
+            { 
+                AccountId = null, 
+                GlAccountCode = GlAccount.BillerClearing, 
+                GlAccountName = "Biller Settlement Clearing", 
+                TransactionId = billTx.Id, 
+                Amount = 1_000m, 
+                IsDebit = false 
+            });
 
             await dbContext.SaveChangesAsync();
 
@@ -369,12 +427,12 @@ namespace Corevix.Tests
 
             // acc1: 7000, acc2: 2000 → total = 9000
             Assert.Equal(9_000m, report.TotalAccountBalances);
-            // Credits: 10000 (deposit) + 3000 (transfer credit) = 13000
-            Assert.Equal(13_000m, report.TotalLedgerCredits);
-            // Debits: 3000 (transfer debit) + 1000 (bill debit) = 4000
-            Assert.Equal(4_000m, report.TotalLedgerDebits);
-            // Net: 13000 - 4000 = 9000
-            Assert.Equal(9_000m, report.NetLedgerPosition);
+            // Credits: 10000 (deposit credit) + 3000 (transfer credit) = 13000
+            // Debits: 10000 (deposit debit) + 3000 (transfer debit) + 1000 (bill debit) = 14000
+            // But wait, the credits also include 1000 (bill credit to biller clearing) -> total credits = 14000
+            Assert.Equal(14_000m, report.TotalLedgerCredits);
+            Assert.Equal(14_000m, report.TotalLedgerDebits);
+            Assert.Equal(0m, report.NetLedgerPosition);
             Assert.Equal(0m, report.Discrepancy);
             Assert.True(report.IsReconciled);
         }

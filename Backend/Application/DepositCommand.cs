@@ -63,15 +63,54 @@ namespace Corevix.Application
 
             _dbContext.Transactions.Add(transaction);
 
-            var ledgerEntry = new LedgerEntry
+            string glCode;
+            string glName;
+            switch (account.AccountType)
             {
-                AccountId = account.Id,
+                case AccountType.Savings:
+                    glCode = GlAccount.SavingsDeposits;
+                    glName = "Customer Savings Deposits";
+                    break;
+                case AccountType.Checking:
+                    glCode = GlAccount.CheckingDeposits;
+                    glName = "Customer Checking Deposits";
+                    break;
+                case AccountType.TimeDeposit:
+                    glCode = GlAccount.TimeDeposits;
+                    glName = "Customer Time Deposits";
+                    break;
+                case AccountType.Loan:
+                    glCode = GlAccount.LoanReceivable;
+                    glName = "Customer Loan Receivables";
+                    break;
+                default:
+                    throw new InvalidOperationException("Unsupported account type.");
+            }
+
+            // Debit Cash Vault
+            var debitEntry = new LedgerEntry
+            {
+                AccountId = null,
+                GlAccountCode = GlAccount.CashVault,
+                GlAccountName = "Cash Asset (Vault)",
                 TransactionId = transaction.Id,
                 Amount = request.Amount,
-                IsDebit = false // Credit
+                IsDebit = true
             };
 
-            _dbContext.LedgerEntries.Add(ledgerEntry);
+            // Credit Customer Deposit/Account
+            var creditEntry = new LedgerEntry
+            {
+                AccountId = account.Id,
+                GlAccountCode = glCode,
+                GlAccountName = glName,
+                TransactionId = transaction.Id,
+                Amount = request.Amount,
+                IsDebit = false
+            };
+
+            _dbContext.LedgerEntries.Add(debitEntry);
+            _dbContext.LedgerEntries.Add(creditEntry);
 
             await _dbContext.SaveChangesAsync(cancellationToken);
 

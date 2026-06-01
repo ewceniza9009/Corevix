@@ -109,9 +109,27 @@ import { AccountService, AccountDetailsDto, TransactionDto } from '../../core/se
                   <h3 class="text-sm font-extrabold text-foreground">Cash Flow</h3>
                 </div>
                 <div class="flex items-center gap-1 bg-slate-100 dark:bg-zinc-900 p-0.5 rounded-lg text-[10px] font-bold">
-                  <button class="px-2.5 py-1 rounded-md bg-card shadow-sm text-foreground">Weekly</button>
-                  <button class="px-2.5 py-1 text-zinc-500 rounded-md">Daily</button>
-                  <button class="px-2.5 py-1 text-zinc-500 rounded-md">Manage</button>
+                  <button 
+                    type="button" 
+                    (click)="chartPeriod.set('weekly')" 
+                    [class]="chartPeriod() === 'weekly' ? 'px-2.5 py-1 rounded-md bg-card shadow-sm text-foreground' : 'px-2.5 py-1 text-zinc-500 rounded-md hover:text-foreground transition-all'"
+                  >
+                    Weekly
+                  </button>
+                  <button 
+                    type="button" 
+                    (click)="chartPeriod.set('daily')" 
+                    [class]="chartPeriod() === 'daily' ? 'px-2.5 py-1 rounded-md bg-card shadow-sm text-foreground' : 'px-2.5 py-1 text-zinc-500 rounded-md hover:text-foreground transition-all'"
+                  >
+                    Daily
+                  </button>
+                  <button 
+                    type="button" 
+                    (click)="scrollToStatement()" 
+                    class="px-2.5 py-1 text-zinc-500 rounded-md hover:text-foreground transition-all"
+                  >
+                    Manage
+                  </button>
                 </div>
               </div>
 
@@ -121,13 +139,15 @@ import { AccountService, AccountDetailsDto, TransactionDto } from '../../core/se
                   <!-- Zero Line -->
                   <div class="absolute top-[55%] left-0 right-0 border-t border-dashed border-border/80 z-0"></div>
 
-                  @for (day of getCashFlowData(); track day.name) {
+                  @for (day of getCashFlowData(); track day.name; let idx = $index) {
                     <div class="flex flex-col items-center flex-1 group z-10">
                       <!-- Inflow bar (goes up) -->
-                      <div class="w-2.5 sm:w-3.5 bg-[#025864] rounded-t-full transition-all group-hover:opacity-85" [style.height.px]="day.in * 0.7"></div>
+                      <div [class]="chartPeriod() === 'weekly' ? 'w-2 sm:w-3 bg-[#025864] rounded-t-full transition-all group-hover:opacity-85' : 'w-1 sm:w-1.5 bg-[#025864] rounded-t-full transition-all group-hover:opacity-85'" [style.height.px]="day.in * 0.7"></div>
                       <!-- Outflow bar (goes down, with gap) -->
-                      <div class="w-2.5 sm:w-3.5 bg-[#00D47E] rounded-b-full mt-1.5 transition-all group-hover:opacity-85" [style.height.px]="day.out * 0.5"></div>
-                      <span class="text-[9px] text-zinc-400 font-semibold mt-3 select-none">{{ day.name }}</span>
+                      <div [class]="chartPeriod() === 'weekly' ? 'w-2 sm:w-3 bg-[#00D47E] rounded-b-full mt-1.5 transition-all group-hover:opacity-85' : 'w-1 sm:w-1.5 bg-[#00D47E] rounded-b-full mt-1 transition-all group-hover:opacity-85'" [style.height.px]="day.out * 0.5"></div>
+                      <span class="text-[9px] text-zinc-400 font-semibold mt-3 select-none">
+                        {{ chartPeriod() === 'weekly' ? day.name : (idx % 5 === 0 ? day.name : '') }}
+                      </span>
                     </div>
                   }
                 </div>
@@ -401,6 +421,7 @@ export class ClientDashboardComponent implements OnInit {
   accounts = signal<AccountDetailsDto[]>([]);
   selectedAccount = signal<AccountDetailsDto | null>(null);
   passbookLines = signal<any[]>([]);
+  chartPeriod = signal<'weekly' | 'daily'>('weekly');
 
   // Simulation amounts
   simDepositAmount = 0;
@@ -479,25 +500,13 @@ export class ClientDashboardComponent implements OnInit {
   }
 
   getCashFlowData() {
-    const lines = this.passbookLines();
-    if (!lines || lines.length === 0) {
-      // Default beautiful mock visual data in case no transactions exist yet
-      return [
-        {name: 'Mon', in: 65, out: 40},
-        {name: 'Tue', in: 85, out: 30},
-        {name: 'Wed', in: 70, out: 50},
-        {name: 'Thu', in: 95, out: 35},
-        {name: 'Fri', in: 100, out: 20},
-        {name: 'Sat', in: 80, out: 45},
-        {name: 'Sun', in: 60, out: 55}
-      ];
-    }
-
+    const lines = this.passbookLines() || [];
     const groups: { [key: string]: { in: number, out: number } } = {};
     const days: string[] = [];
+    const periodDays = this.chartPeriod() === 'weekly' ? 7 : 30;
 
-    // Group last 7 days from today
-    for (let i = 6; i >= 0; i--) {
+    // Group last N days from today
+    for (let i = periodDays - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -525,10 +534,17 @@ export class ClientDashboardComponent implements OnInit {
       const item = groups[day];
       return {
         name: day,
-        in: Math.max(5, (item.in / maxVal) * 100),
-        out: Math.max(5, (item.out / maxVal) * 100)
+        in: item.in > 0 ? Math.max(3, (item.in / maxVal) * 100) : 0,
+        out: item.out > 0 ? Math.max(3, (item.out / maxVal) * 100) : 0
       };
     });
+  }
+
+  scrollToStatement() {
+    const el = document.querySelector('table');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
   }
 
   calculateInsights(lines: any[]) {

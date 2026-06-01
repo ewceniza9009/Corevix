@@ -94,6 +94,27 @@ namespace Corevix.Persistence
             }
 
             // 3. Seed Mock Customers, Users, Accounts, Transactions, and LedgerEntries using Bogus
+            // Clear existing customer data in dev environment to force the fresh high-fidelity chronological seed
+            if (await dbContext.Customers.AnyAsync())
+            {
+                var ledgerEntries = await dbContext.LedgerEntries.ToListAsync();
+                dbContext.LedgerEntries.RemoveRange(ledgerEntries);
+
+                var transactions = await dbContext.Transactions.ToListAsync();
+                dbContext.Transactions.RemoveRange(transactions);
+
+                var accounts = await dbContext.Accounts.ToListAsync();
+                dbContext.Accounts.RemoveRange(accounts);
+
+                var customerUsers = await dbContext.Users.Where(u => u.Role == UserRole.Customer).ToListAsync();
+                dbContext.Users.RemoveRange(customerUsers);
+
+                var customers = await dbContext.Customers.ToListAsync();
+                dbContext.Customers.RemoveRange(customers);
+
+                await dbContext.SaveChangesAsync();
+            }
+
             if (!await dbContext.Customers.AnyAsync())
             {
                 Randomizer.Seed = new Random(8675309);
@@ -193,16 +214,36 @@ namespace Corevix.Persistence
                         };
                         accountList.Add(checking);
                     }
+
+                    // Create Time Deposit Account (100% chance for John Doe customer@corevix.com, 50% for others)
+                    if (customer.Id == defaultCustomer.Id || faker.Random.Bool(0.5f))
+                    {
+                        var timeDeposit = new Account
+                        {
+                            Id = Guid.NewGuid(),
+                            TenantId = customer.TenantId,
+                            AccountNumber = "30" + faker.Random.Number(10000000, 99999999),
+                            BranchCode = savings.BranchCode,
+                            AccountType = AccountType.TimeDeposit,
+                            Balance = 0,
+                            Currency = "PHP",
+                            Status = AccountStatus.Active,
+                            CustomerId = customer.Id,
+                            CreatedAt = customer.CreatedAt
+                        };
+                        accountList.Add(timeDeposit);
+                    }
                 }
 
                 await dbContext.Accounts.AddRangeAsync(accountList);
                 await dbContext.SaveChangesAsync();
 
-                // Generate transactions to populate balances and ledger entries
+                // 1. Initial Opening Deposit for all accounts to establish funds
                 foreach (var account in accountList)
                 {
-                    // 1. Initial Deposit to establish some funds
-                    var initialAmount = faker.Finance.Amount(10000, 200000);
+                    var initialAmount = faker.Finance.Amount(50000, 200000);
+                    initialAmount = Math.Floor(initialAmount / 1000) * 1000; // clean thousands
+                    
                     var initialTx = new Transaction
                     {
                         Id = Guid.NewGuid(),
@@ -217,120 +258,353 @@ namespace Corevix.Persistence
                     };
                     dbContext.Transactions.Add(initialTx);
 
-                    var initialLedger = new LedgerEntry
+                    var glCode = account.AccountType switch
+                    {
+                        AccountType.Checking => GlAccount.CheckingDeposits,
+                        AccountType.TimeDeposit => GlAccount.TimeDeposits,
+                        _ => GlAccount.SavingsDeposits
+                    };
+                    var glName = account.AccountType switch
+                    {
+                        AccountType.Checking => "Customer Checking Deposits",
+                        AccountType.TimeDeposit => "Customer Time Deposits",
+                        _ => "Customer Savings Deposits"
+                    };
+
+                    // Debit: Cash Asset
+                    dbContext.LedgerEntries.Add(new LedgerEntry
+                    {
+                        Id = Guid.NewGuid(),
+                        TenantId = account.TenantId,
+                        AccountId = null,
+                        GlAccountCode = GlAccount.CashVault,
+                        GlAccountName = "Cash Asset (Vault)",
+                        TransactionId = initialTx.Id,
+                        Amount = initialAmount,
+                        IsDebit = true,
+                        CreatedAt = account.CreatedAt
+                    });
+
+                    // Credit: Customer Account
+                    dbContext.LedgerEntries.Add(new LedgerEntry
                     {
                         Id = Guid.NewGuid(),
                         TenantId = account.TenantId,
                         AccountId = account.Id,
+                        GlAccountCode = glCode,
+                        GlAccountName = glName,
                         TransactionId = initialTx.Id,
                         Amount = initialAmount,
-                        IsDebit = false, // Credit increases deposit balance
+                        IsDebit = false,
                         CreatedAt = account.CreatedAt
-                    };
-                    dbContext.LedgerEntries.Add(initialLedger);
-                    account.Balance += initialAmount;
+                    });
 
-                    // 2. Generate random transaction history
-                    int txCount = faker.Random.Number(3, 8);
-                    for (int i = 0; i < txCount; i++)
+                    account.Balance = initialAmount;
+                }
+
+                await dbContext.SaveChangesAsync();
+
+                // 2. Generate chronological transaction history over the last 30 days
+                var transactionFaker = new Faker();
+                var startDay = DateTime.UtcNow.AddDays(-29);
+
+                for (int dayOffset = 0; dayOffset <= 29; dayOffset++)
+                {
+                    var currentDay = startDay.AddDays(dayOffset);
+
+                    // Daily transaction density increases near the end of the month
+                    int dailyTxCount = transactionFaker.Random.Number(1, 2);
+                    if (dayOffset >= 23) // Generate more events in the last 7 days for rich graph data
                     {
-                        var type = faker.PickRandom<TransactionType>();
-                        var txTime = account.CreatedAt.AddDays(faker.Random.Number(1, 30));
+                        dailyTxCount = transactionFaker.Random.Number(3, 5);
+                    }
+
+                    for (int tIndex = 0; tIndex < dailyTxCount; tIndex++)
+                    {
+                        var txTime = currentDay.AddHours(transactionFaker.Random.Number(0, 23))
+                                               .AddMinutes(transactionFaker.Random.Number(0, 59));
                         if (txTime > DateTime.UtcNow) txTime = DateTime.UtcNow;
+
+                        // Select a random checking/savings account from the active accounts pool
+                        var srcAccount = transactionFaker.PickRandom(accountList.Where(a => a.AccountType == AccountType.Savings || a.AccountType == AccountType.Checking).ToList());
+                        var srcGlCode = srcAccount.AccountType == AccountType.Checking ? GlAccount.CheckingDeposits : GlAccount.SavingsDeposits;
+                        var srcGlName = srcAccount.AccountType == AccountType.Checking ? "Customer Checking Deposits" : "Customer Savings Deposits";
+
+                        var type = transactionFaker.PickRandom<TransactionType>();
 
                         if (type == TransactionType.Deposit)
                         {
-                            var depAmt = faker.Finance.Amount(1000, 50000);
+                            var depAmt = transactionFaker.Finance.Amount(2000, 30000);
+                            depAmt = Math.Floor(depAmt / 100) * 100; // clean values
+
                             var tx = new Transaction
                             {
                                 Id = Guid.NewGuid(),
-                                TenantId = account.TenantId,
-                                ReferenceNumber = "DEP-" + faker.Random.Replace("######-####").ToUpperInvariant(),
+                                TenantId = srcAccount.TenantId,
+                                ReferenceNumber = "DEP-" + transactionFaker.Random.Replace("######-####").ToUpperInvariant(),
                                 Amount = depAmt,
                                 TransactionType = TransactionType.Deposit,
                                 Status = TransactionStatus.Completed,
-                                DestinationAccountId = account.Id,
+                                DestinationAccountId = srcAccount.Id,
                                 Description = "OTC Teller Cash Deposit",
                                 CreatedAt = txTime
                             };
                             dbContext.Transactions.Add(tx);
 
+                            // Debit Cash
                             dbContext.LedgerEntries.Add(new LedgerEntry
                             {
                                 Id = Guid.NewGuid(),
-                                TenantId = account.TenantId,
-                                AccountId = account.Id,
+                                TenantId = srcAccount.TenantId,
+                                AccountId = null,
+                                GlAccountCode = GlAccount.CashVault,
+                                GlAccountName = "Cash Asset (Vault)",
                                 TransactionId = tx.Id,
                                 Amount = depAmt,
-                                IsDebit = false, // Credit
-                                CreatedAt = txTime
-                            });
-                            account.Balance += depAmt;
-                        }
-                        else if (type == TransactionType.Withdrawal && account.Balance > 5000)
-                        {
-                            var wthAmt = faker.Finance.Amount(500, 4000);
-                            // Ensure it is integer/hundred bills
-                            wthAmt = Math.Floor(wthAmt / 100) * 100;
-                            if (wthAmt <= 0) wthAmt = 100;
-
-                            var tx = new Transaction
-                            {
-                                Id = Guid.NewGuid(),
-                                TenantId = account.TenantId,
-                                ReferenceNumber = "ATM-" + faker.Random.Replace("######-####").ToUpperInvariant(),
-                                Amount = wthAmt,
-                                TransactionType = TransactionType.Withdrawal,
-                                Status = TransactionStatus.Completed,
-                                SourceAccountId = account.Id,
-                                Description = "ATM Withdrawal",
-                                CreatedAt = txTime
-                            };
-                            dbContext.Transactions.Add(tx);
-
-                            dbContext.LedgerEntries.Add(new LedgerEntry
-                            {
-                                Id = Guid.NewGuid(),
-                                TenantId = account.TenantId,
-                                AccountId = account.Id,
-                                TransactionId = tx.Id,
-                                Amount = wthAmt,
-                                IsDebit = true, // Debit
-                                CreatedAt = txTime
-                            });
-                            account.Balance -= wthAmt;
-                        }
-                        else if (type == TransactionType.BillPayment && account.Balance > 10000)
-                        {
-                            var billAmt = faker.Finance.Amount(500, 5000);
-                            var billers = new[] { "Meralco", "PLDT", "Maynilad", "Globe Telecom" };
-                            var biller = faker.PickRandom(billers);
-
-                            var tx = new Transaction
-                            {
-                                Id = Guid.NewGuid(),
-                                TenantId = account.TenantId,
-                                ReferenceNumber = "BIL-" + faker.Random.Replace("######-####").ToUpperInvariant(),
-                                Amount = billAmt,
-                                TransactionType = TransactionType.BillPayment,
-                                Status = TransactionStatus.Completed,
-                                SourceAccountId = account.Id,
-                                Description = $"Utility Settlement to {biller}",
-                                CreatedAt = txTime
-                            };
-                            dbContext.Transactions.Add(tx);
-
-                            dbContext.LedgerEntries.Add(new LedgerEntry
-                            {
-                                Id = Guid.NewGuid(),
-                                TenantId = account.TenantId,
-                                AccountId = account.Id,
-                                TransactionId = tx.Id,
-                                Amount = billAmt,
                                 IsDebit = true,
                                 CreatedAt = txTime
                             });
-                            account.Balance -= billAmt;
+
+                            // Credit Customer
+                            dbContext.LedgerEntries.Add(new LedgerEntry
+                            {
+                                Id = Guid.NewGuid(),
+                                TenantId = srcAccount.TenantId,
+                                AccountId = srcAccount.Id,
+                                GlAccountCode = srcGlCode,
+                                GlAccountName = srcGlName,
+                                TransactionId = tx.Id,
+                                Amount = depAmt,
+                                IsDebit = false,
+                                CreatedAt = txTime
+                            });
+
+                            srcAccount.Balance += depAmt;
+                        }
+                        else if (type == TransactionType.Withdrawal)
+                        {
+                            var wthAmt = transactionFaker.Finance.Amount(1000, 10000);
+                            wthAmt = Math.Floor(wthAmt / 500) * 500; // ATM round bills
+                            if (wthAmt <= 0) wthAmt = 500;
+
+                            if (srcAccount.Balance >= wthAmt)
+                            {
+                                var tx = new Transaction
+                                {
+                                    Id = Guid.NewGuid(),
+                                    TenantId = srcAccount.TenantId,
+                                    ReferenceNumber = "ATM-" + transactionFaker.Random.Replace("######-####").ToUpperInvariant(),
+                                    Amount = wthAmt,
+                                    TransactionType = TransactionType.Withdrawal,
+                                    Status = TransactionStatus.Completed,
+                                    SourceAccountId = srcAccount.Id,
+                                    Description = "ATM Cash Withdrawal",
+                                    CreatedAt = txTime
+                                };
+                                dbContext.Transactions.Add(tx);
+
+                                // Debit Customer
+                                dbContext.LedgerEntries.Add(new LedgerEntry
+                                {
+                                    Id = Guid.NewGuid(),
+                                    TenantId = srcAccount.TenantId,
+                                    AccountId = srcAccount.Id,
+                                    GlAccountCode = srcGlCode,
+                                    GlAccountName = srcGlName,
+                                    TransactionId = tx.Id,
+                                    Amount = wthAmt,
+                                    IsDebit = true,
+                                    CreatedAt = txTime
+                                });
+
+                                // Credit Cash
+                                dbContext.LedgerEntries.Add(new LedgerEntry
+                                {
+                                    Id = Guid.NewGuid(),
+                                    TenantId = srcAccount.TenantId,
+                                    AccountId = null,
+                                    GlAccountCode = GlAccount.CashVault,
+                                    GlAccountName = "Cash Asset (Vault)",
+                                    TransactionId = tx.Id,
+                                    Amount = wthAmt,
+                                    IsDebit = false,
+                                    CreatedAt = txTime
+                                });
+
+                                srcAccount.Balance -= wthAmt;
+                            }
+                        }
+                        else if (type == TransactionType.BillPayment)
+                        {
+                            var billAmt = transactionFaker.Finance.Amount(500, 5000);
+                            billAmt = Math.Round(billAmt, 2);
+
+                            if (srcAccount.Balance >= billAmt)
+                            {
+                                var billers = new[] { "Meralco", "PLDT", "Maynilad", "Globe Telecom", "Manila Water" };
+                                var biller = transactionFaker.PickRandom(billers);
+
+                                var tx = new Transaction
+                                {
+                                    Id = Guid.NewGuid(),
+                                    TenantId = srcAccount.TenantId,
+                                    ReferenceNumber = "BIL-" + transactionFaker.Random.Replace("######-####").ToUpperInvariant(),
+                                    Amount = billAmt,
+                                    TransactionType = TransactionType.BillPayment,
+                                    Status = TransactionStatus.Completed,
+                                    SourceAccountId = srcAccount.Id,
+                                    Description = $"Utility Payment to {biller}",
+                                    CreatedAt = txTime
+                                };
+                                dbContext.Transactions.Add(tx);
+
+                                // Debit Customer
+                                dbContext.LedgerEntries.Add(new LedgerEntry
+                                {
+                                    Id = Guid.NewGuid(),
+                                    TenantId = srcAccount.TenantId,
+                                    AccountId = srcAccount.Id,
+                                    GlAccountCode = srcGlCode,
+                                    GlAccountName = srcGlName,
+                                    TransactionId = tx.Id,
+                                    Amount = billAmt,
+                                    IsDebit = true,
+                                    CreatedAt = txTime
+                                });
+
+                                // Credit Biller Clearing
+                                dbContext.LedgerEntries.Add(new LedgerEntry
+                                {
+                                    Id = Guid.NewGuid(),
+                                    TenantId = srcAccount.TenantId,
+                                    AccountId = null,
+                                    GlAccountCode = GlAccount.BillerClearing,
+                                    GlAccountName = "Biller Settlement Clearing",
+                                    TransactionId = tx.Id,
+                                    Amount = billAmt,
+                                    IsDebit = false,
+                                    CreatedAt = txTime
+                                });
+
+                                srcAccount.Balance -= billAmt;
+                            }
+                        }
+                        else if (type == TransactionType.Transfer)
+                        {
+                            var trfAmt = transactionFaker.Finance.Amount(1000, 15000);
+                            trfAmt = Math.Floor(trfAmt / 100) * 100;
+
+                            if (srcAccount.Balance >= trfAmt)
+                            {
+                                bool isExternal = transactionFaker.Random.Bool(0.3f); // 30% external, 70% internal
+
+                                if (isExternal)
+                                {
+                                    var extBanks = new[] { "BDO Unibank", "BPI", "Metrobank", "GCash", "Maya" };
+                                    var targetBank = transactionFaker.PickRandom(extBanks);
+                                    var mockAccNum = transactionFaker.Random.Replace("09#########");
+
+                                    var tx = new Transaction
+                                    {
+                                        Id = Guid.NewGuid(),
+                                        TenantId = srcAccount.TenantId,
+                                        ReferenceNumber = "TRF-" + transactionFaker.Random.Replace("######-####").ToUpperInvariant(),
+                                        Amount = trfAmt,
+                                        TransactionType = TransactionType.Transfer,
+                                        Status = TransactionStatus.Completed,
+                                        SourceAccountId = srcAccount.Id,
+                                        Description = $"InstaPay Transfer to {targetBank} - {mockAccNum}",
+                                        CreatedAt = txTime
+                                    };
+                                    dbContext.Transactions.Add(tx);
+
+                                    // Debit Customer
+                                    dbContext.LedgerEntries.Add(new LedgerEntry
+                                    {
+                                        Id = Guid.NewGuid(),
+                                        TenantId = srcAccount.TenantId,
+                                        AccountId = srcAccount.Id,
+                                        GlAccountCode = srcGlCode,
+                                        GlAccountName = srcGlName,
+                                        TransactionId = tx.Id,
+                                        Amount = trfAmt,
+                                        IsDebit = true,
+                                        CreatedAt = txTime
+                                    });
+
+                                    // Credit Central Bank Reserve
+                                    dbContext.LedgerEntries.Add(new LedgerEntry
+                                    {
+                                        Id = Guid.NewGuid(),
+                                        TenantId = srcAccount.TenantId,
+                                        AccountId = null,
+                                        GlAccountCode = GlAccount.CentralBankReserve,
+                                        GlAccountName = "Central Bank Reserve (Interbank Settlement)",
+                                        TransactionId = tx.Id,
+                                        Amount = trfAmt,
+                                        IsDebit = false,
+                                        CreatedAt = txTime
+                                    });
+
+                                    srcAccount.Balance -= trfAmt;
+                                }
+                                else
+                                {
+                                    // Internal Transfer: pick a destination account from other accounts in the list
+                                    var destAccount = accountList.FirstOrDefault(a => a.Id != srcAccount.Id);
+                                    if (destAccount != null)
+                                    {
+                                        var destGlCode = destAccount.AccountType == AccountType.Checking ? GlAccount.CheckingDeposits : GlAccount.SavingsDeposits;
+                                        var destGlName = destAccount.AccountType == AccountType.Checking ? "Customer Checking Deposits" : "Customer Savings Deposits";
+
+                                        var tx = new Transaction
+                                        {
+                                            Id = Guid.NewGuid(),
+                                            TenantId = srcAccount.TenantId,
+                                            ReferenceNumber = "TRF-" + transactionFaker.Random.Replace("######-####").ToUpperInvariant(),
+                                            Amount = trfAmt,
+                                            TransactionType = TransactionType.Transfer,
+                                            Status = TransactionStatus.Completed,
+                                            SourceAccountId = srcAccount.Id,
+                                            DestinationAccountId = destAccount.Id,
+                                            Description = $"Fund Transfer to Account {destAccount.AccountNumber}",
+                                            CreatedAt = txTime
+                                        };
+                                        dbContext.Transactions.Add(tx);
+
+                                        // Debit Source Customer
+                                        dbContext.LedgerEntries.Add(new LedgerEntry
+                                        {
+                                            Id = Guid.NewGuid(),
+                                            TenantId = srcAccount.TenantId,
+                                            AccountId = srcAccount.Id,
+                                            GlAccountCode = srcGlCode,
+                                            GlAccountName = srcGlName,
+                                            TransactionId = tx.Id,
+                                            Amount = trfAmt,
+                                            IsDebit = true,
+                                            CreatedAt = txTime
+                                        });
+
+                                        // Credit Destination Customer
+                                        dbContext.LedgerEntries.Add(new LedgerEntry
+                                        {
+                                            Id = Guid.NewGuid(),
+                                            TenantId = destAccount.TenantId,
+                                            AccountId = destAccount.Id,
+                                            GlAccountCode = destGlCode,
+                                            GlAccountName = destGlName,
+                                            TransactionId = tx.Id,
+                                            Amount = trfAmt,
+                                            IsDebit = false,
+                                            CreatedAt = txTime
+                                        });
+
+                                        srcAccount.Balance -= trfAmt;
+                                        destAccount.Balance += trfAmt;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -340,3 +614,4 @@ namespace Corevix.Persistence
         }
     }
 }
+// Seeding overhauled successfully

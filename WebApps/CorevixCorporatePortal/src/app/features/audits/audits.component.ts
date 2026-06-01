@@ -10,49 +10,41 @@ import { AuthService } from '../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="space-y-8">
+    <div class="space-y-8 animate-fade-in text-foreground">
       <!-- Overview Header -->
-      <div class="flex justify-between items-center">
+      <div class="flex justify-between items-center pb-6 border-b border-border/10">
         <div>
-          <h2 class="text-3xl font-extrabold tracking-tight text-white">Compliance & Banking Operations</h2>
-          <p class="text-sm opacity-70 mt-1">Maker-Checker authorizations, GL Reconciliation, OTC Teller Services, and Inter-branch audits.</p>
+          <h2 class="text-4xl font-black tracking-tight bg-gradient-to-r from-primary to-[#00d47e] bg-clip-text text-transparent">Compliance & Operations</h2>
+          <p class="text-sm text-foreground/70 mt-2">Maker-Checker authorizations, GL Reconciliation, OTC Teller Services, and Inter-branch audits.</p>
         </div>
-        <div class="text-xs px-3 py-1.5 bg-zinc-800/80 text-zinc-300 border border-border/40 rounded-xl">
-          Logged in as: <span class="font-bold text-primary">{{ authService.currentUser() }}</span> ({{ authService.userRole() }})
+        <div class="text-xs px-3 py-1.5 glass-panel text-foreground/80 border border-border/10 rounded-xl">
+          Logged in as: <span class="font-bold text-primary dark:text-[#00d47e]">{{ authService.currentUser() }}</span> ({{ authService.userRole() }})
         </div>
       </div>
 
       <!-- Tab Selections -->
-      <div class="flex flex-wrap border-b border-border/40 gap-1">
+      <div class="flex flex-wrap gap-2 pb-2">
         <button
           (click)="activeTab = 'kyc'"
-          [class.border-primary]="activeTab === 'kyc'"
-          [class.text-primary]="activeTab === 'kyc'"
-          class="px-5 py-3 border-b-2 border-transparent font-bold text-xs uppercase tracking-wider transition"
+          [class]="activeTab === 'kyc' ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm'"
         >
           KYC Maker-Checker Queue
         </button>
         <button
           (click)="activeTab = 'otc'"
-          [class.border-primary]="activeTab === 'otc'"
-          [class.text-primary]="activeTab === 'otc'"
-          class="px-5 py-3 border-b-2 border-transparent font-bold text-xs uppercase tracking-wider transition"
+          [class]="activeTab === 'otc' ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm'"
         >
           OTC Teller Services
         </button>
         <button
           (click)="activeTab = 'accounts'"
-          [class.border-primary]="activeTab === 'accounts'"
-          [class.text-primary]="activeTab === 'accounts'"
-          class="px-5 py-3 border-b-2 border-transparent font-bold text-xs uppercase tracking-wider transition"
+          [class]="activeTab === 'accounts' ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm'"
         >
           Account Console
         </button>
         <button
           (click)="activeTab = 'reconciliation'"
-          [class.border-primary]="activeTab === 'reconciliation'"
-          [class.text-primary]="activeTab === 'reconciliation'"
-          class="px-5 py-3 border-b-2 border-transparent font-bold text-xs uppercase tracking-wider transition"
+          [class]="activeTab === 'reconciliation' ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm'"
         >
           GL Reconciliation
         </button>
@@ -60,13 +52,13 @@ import { AuthService } from '../../core/services/auth.service';
 
       <!-- Error / Success Banners -->
       @if (errorMessage()) {
-        <div class="p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-xs">
-          ⚠️ {{ errorMessage() }}
+        <div class="alert alert-error">
+          <span>⚠️</span> {{ errorMessage() }}
         </div>
       }
       @if (successMessage()) {
-        <div class="p-3 bg-primary/10 border border-primary/20 text-primary rounded-xl text-xs">
-          🎉 {{ successMessage() }}
+        <div class="alert alert-success">
+          <span>🎉</span> {{ successMessage() }}
         </div>
       }
 
@@ -74,12 +66,12 @@ import { AuthService } from '../../core/services/auth.service';
 
       <!-- KYC Tab -->
       @if (activeTab === 'kyc') {
-        <div class="glass-card p-6 border border-border/40 rounded-2xl space-y-4">
-          <h3 class="text-lg font-bold text-white">Pending KYC Verification Queue</h3>
+        <div class="glass-card p-6 rounded-3xl space-y-4">
+          <h3 class="text-lg font-bold text-foreground">Pending KYC Verification Queue</h3>
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="border-b border-border/20 text-xs text-zinc-400 font-semibold uppercase tracking-wider">
+                <tr class="border-b border-border/20 text-xs text-zinc-500 font-bold uppercase tracking-wider">
                   <th class="py-3 px-4">Customer Name</th>
                   <th class="py-3 px-4">Email</th>
                   <th class="py-3 px-4">ID Details</th>
@@ -89,17 +81,17 @@ import { AuthService } from '../../core/services/auth.service';
               <tbody class="text-sm">
                 @for (cust of pendingKyc(); track cust.id) {
                   <tr class="border-b border-border/10 hover:bg-background/20 transition">
-                    <td class="py-3 px-4 text-white font-medium">
+                    <td class="py-3 px-4 text-foreground font-medium">
                       {{ cust.firstName }} {{ cust.lastName }}
                     </td>
-                    <td class="py-3 px-4 text-zinc-300">{{ cust.email }}</td>
-                    <td class="py-3 px-4 text-zinc-300">
+                    <td class="py-3 px-4 text-foreground/70">{{ cust.email }}</td>
+                    <td class="py-3 px-4 text-foreground/70">
                       {{ cust.idType }} - {{ cust.idNumber }}
                     </td>
                     <td class="py-3 px-4 text-right">
                       <button
                         (click)="approveKyc(cust.id)"
-                        class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition"
+                        class="btn btn-accent btn-sm"
                       >
                         Approve KYC
                       </button>
@@ -107,7 +99,7 @@ import { AuthService } from '../../core/services/auth.service';
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="4" class="py-6 text-center text-zinc-500">No customers pending KYC verification.</td>
+                    <td colspan="4" class="py-6 text-center text-zinc-500 font-bold">No customers pending KYC verification.</td>
                   </tr>
                 }
               </tbody>
@@ -118,27 +110,27 @@ import { AuthService } from '../../core/services/auth.service';
 
       <!-- OTC Teller Services Tab -->
       @if (activeTab === 'otc') {
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="glass-card p-6 border border-border/40 rounded-2xl space-y-4">
-            <h3 class="text-lg font-bold text-white">OTC Deposits & Withdrawals</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-slide-up">
+          <div class="glass-card p-6 rounded-3xl space-y-4">
+            <h3 class="text-lg font-bold text-foreground">OTC Deposits & Withdrawals</h3>
             <form (ngSubmit)="handleOtcTransaction()" class="space-y-4">
               <div>
-                <label class="block text-xs font-semibold uppercase mb-1.5">Target Account Number</label>
+                <label class="block text-xs font-bold uppercase mb-1.5 text-zinc-500">Target Account Number</label>
                 <input
                   type="text"
                   name="otcAccNum"
                   [(ngModel)]="otcAccountNumber"
                   required
-                  class="w-full px-3 py-2 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  class="input"
                 />
               </div>
 
               <div>
-                <label class="block text-xs font-semibold uppercase mb-1.5">Transaction Type</label>
+                <label class="block text-xs font-bold uppercase mb-1.5 text-zinc-500">Transaction Type</label>
                 <select
                   name="otcTxType"
                   [(ngModel)]="otcType"
-                  class="w-full px-3 py-2 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  class="input"
                 >
                   <option value="deposit">Deposit</option>
                   <option value="withdraw">Withdrawal</option>
@@ -146,40 +138,40 @@ import { AuthService } from '../../core/services/auth.service';
               </div>
 
               <div>
-                <label class="block text-xs font-semibold uppercase mb-1.5">Amount (₱)</label>
+                <label class="block text-xs font-bold uppercase mb-1.5 text-zinc-500">Amount (₱)</label>
                 <input
                   type="number"
                   name="otcTxAmount"
                   [(ngModel)]="otcAmount"
                   required
                   min="1"
-                  class="w-full px-3 py-2 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  class="input"
                 />
               </div>
 
               <button
                 type="submit"
-                class="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover transition text-sm shadow-lg shadow-primary/20"
+                class="btn btn-primary btn-block"
               >
                 Execute OTC Transaction
               </button>
             </form>
           </div>
 
-          <div class="glass-card p-6 border border-border/40 rounded-2xl space-y-4">
-            <h3 class="text-lg font-bold text-white">Teller Passbook / Statement Printer</h3>
-            <p class="text-xs opacity-75">Retrieve transactions logs and print the official statement sheet for customers.</p>
-            <div>
-              <label class="block text-xs font-semibold uppercase mb-1.5">Account Number</label>
+          <div class="glass-card p-6 rounded-3xl space-y-4">
+            <h3 class="text-lg font-bold text-foreground">Teller Passbook / Statement Printer</h3>
+            <p class="text-xs text-foreground/70">Retrieve transactions logs and print the official statement sheet for customers.</p>
+            <div class="space-y-2">
+              <label class="block text-xs font-bold uppercase text-zinc-500">Account Number</label>
               <div class="flex gap-2">
                 <input
                   type="text"
                   [(ngModel)]="otcPrintAccountNum"
-                  class="w-full px-3 py-2 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  class="input"
                 />
                 <button
                   (click)="fetchOtcPassbook()"
-                  class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-sm font-semibold transition"
+                  class="btn btn-secondary"
                 >
                   Load
                 </button>
@@ -187,16 +179,16 @@ import { AuthService } from '../../core/services/auth.service';
             </div>
 
             @if (printLines().length > 0) {
-              <div class="border border-border/20 rounded-xl p-4 bg-background/30 space-y-3">
-                <div class="text-xs font-bold text-zinc-400">Passbook Lines Available for Print</div>
-                <div class="max-h-40 overflow-y-auto space-y-1 font-mono text-xs text-zinc-300">
+              <div class="border border-border/20 rounded-2xl p-4 bg-background/30 space-y-3">
+                <div class="text-xs font-bold text-zinc-500">Passbook Lines Available for Print</div>
+                <div class="max-h-40 overflow-y-auto space-y-1 font-mono text-xs text-foreground/80">
                   @for (l of printLines(); track l.sequence) {
                     <div>Seq: {{ l.sequence }} | {{ l.code }} | {{ l.debit ? '-' + l.debit : '+' + l.credit }} | Bal: {{ l.balance }}</div>
                   }
                 </div>
                 <button
                   (click)="printPassbookSheet()"
-                  class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition"
+                  class="btn btn-accent btn-block"
                 >
                   Print Sheet
                 </button>
@@ -208,18 +200,18 @@ import { AuthService } from '../../core/services/auth.service';
 
       <!-- Account Management Tab -->
       @if (activeTab === 'accounts') {
-        <div class="glass-card p-6 border border-border/40 rounded-2xl space-y-4">
-          <h3 class="text-lg font-bold text-white">Search & Manage Vault Accounts</h3>
+        <div class="glass-card p-6 rounded-3xl space-y-4 animate-slide-up">
+          <h3 class="text-lg font-bold text-foreground">Search & Manage Vault Accounts</h3>
           <div class="flex gap-2">
             <input
               type="text"
               placeholder="Search Customer Email or Account ID"
               [(ngModel)]="accountSearchQuery"
-              class="w-full px-3 py-2 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              class="input"
             />
             <button
               (click)="searchAccounts()"
-              class="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-xl text-sm font-semibold transition"
+              class="btn btn-primary"
             >
               Search
             </button>
@@ -228,35 +220,35 @@ import { AuthService } from '../../core/services/auth.service';
           @if (searchedAccount()) {
             <div class="p-6 border border-border/20 rounded-2xl bg-background/30 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="space-y-3">
-                <h4 class="font-bold text-white text-base">Account Configuration</h4>
+                <h4 class="font-bold text-foreground text-base">Account Configuration</h4>
                 <div>
-                  <span class="text-xs text-zinc-400">Account Number:</span>
-                  <div class="text-sm font-mono text-white">{{ searchedAccount()?.accountNumber }}</div>
+                  <span class="text-xs text-zinc-500 font-bold">Account Number:</span>
+                  <div class="text-sm font-mono text-foreground">{{ searchedAccount()?.accountNumber }}</div>
                 </div>
                 <div>
-                  <span class="text-xs text-zinc-400">Current Balance:</span>
-                  <div class="text-sm font-bold text-white">{{ searchedAccount()?.balance | currency:'PHP':'symbol' }}</div>
+                  <span class="text-xs text-zinc-500 font-bold">Current Balance:</span>
+                  <div class="text-sm font-bold text-foreground">{{ searchedAccount()?.balance | currency:'PHP':'symbol' }}</div>
                 </div>
                 <div>
-                  <span class="text-xs text-zinc-400">Status:</span>
-                  <div class="text-sm font-bold text-white">{{ searchedAccount()?.status === 0 ? 'Active' : searchedAccount()?.status === 1 ? 'Frozen' : 'Closed' }}</div>
+                  <span class="text-xs text-zinc-500 font-bold">Status:</span>
+                  <div class="text-sm font-bold text-foreground">{{ searchedAccount()?.status === 0 ? 'Active' : searchedAccount()?.status === 1 ? 'Frozen' : 'Closed' }}</div>
                 </div>
                 <div class="flex gap-2 pt-2">
                   <button
                     (click)="updateAccountStatus(0)"
-                    class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition"
+                    class="btn btn-accent btn-sm"
                   >
                     Activate
                   </button>
                   <button
                     (click)="updateAccountStatus(1)"
-                    class="px-3 py-1.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-xs font-bold transition"
+                    class="btn btn-secondary btn-sm"
                   >
                     Freeze
                   </button>
                   <button
                     (click)="updateAccountStatus(2)"
-                    class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition"
+                    class="btn btn-danger btn-sm"
                   >
                     Close
                   </button>
@@ -264,26 +256,26 @@ import { AuthService } from '../../core/services/auth.service';
               </div>
 
               <div class="space-y-3">
-                <h4 class="font-bold text-white text-base">Individual Limit Overrides</h4>
+                <h4 class="font-bold text-foreground text-base">Individual Limit Overrides</h4>
                 <div>
-                  <label class="block text-xs text-zinc-400 mb-1">Per-Transaction limit cap (₱)</label>
+                  <label class="block text-xs text-zinc-500 font-bold mb-1">Per-Transaction limit cap (₱)</label>
                   <input
                     type="number"
                     [(ngModel)]="overridePerTrans"
-                    class="w-full px-3 py-1.5 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-xs"
+                    class="input"
                   />
                 </div>
                 <div>
-                  <label class="block text-xs text-zinc-400 mb-1">Daily limit cap (₱)</label>
+                  <label class="block text-xs text-zinc-500 font-bold mb-1">Daily limit cap (₱)</label>
                   <input
                     type="number"
                     [(ngModel)]="overrideDaily"
-                    class="w-full px-3 py-1.5 border border-border rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-xs"
+                    class="input"
                   />
                 </div>
                 <button
                   (click)="saveLimitOverrides()"
-                  class="px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary-hover transition"
+                  class="btn btn-primary btn-block mt-2"
                 >
                   Save Limit Configurations
                 </button>
@@ -295,15 +287,15 @@ import { AuthService } from '../../core/services/auth.service';
 
       <!-- GL Reconciliation Tab -->
       @if (activeTab === 'reconciliation') {
-        <div class="glass-card p-6 border border-border/40 rounded-2xl space-y-6">
+        <div class="glass-card p-6 rounded-3xl space-y-6 animate-slide-up">
           <div class="flex justify-between items-center border-b border-border/10 pb-4">
             <div>
-              <h3 class="text-lg font-bold text-white">General Ledger Real-time Auditing</h3>
-              <p class="text-xs opacity-75">Compare active customer deposit totals against double-entry ledger liquidity entries.</p>
+              <h3 class="text-lg font-bold text-foreground">General Ledger Real-time Auditing</h3>
+              <p class="text-xs text-foreground/70">Compare active customer deposit totals against double-entry ledger liquidity entries.</p>
             </div>
             <button
               (click)="loadReconciliation()"
-              class="px-3 py-1.5 bg-primary hover:bg-primary-hover text-white rounded-lg text-xs font-bold transition"
+              class="btn btn-primary btn-sm"
             >
               Run Audit Reconciliation
             </button>
@@ -312,27 +304,27 @@ import { AuthService } from '../../core/services/auth.service';
           @if (reconReport()) {
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div class="p-5 bg-background/30 border border-border/20 rounded-2xl">
-                <span class="text-xs text-zinc-400 font-medium">Customer Deposits Total</span>
-                <div class="text-xl font-extrabold text-white mt-1">
+                <span class="text-xs text-zinc-500 font-bold">Customer Deposits Total</span>
+                <div class="text-xl font-extrabold text-foreground mt-1">
                   {{ reconReport()?.totalAccountBalances | currency:'PHP':'symbol' }}
                 </div>
               </div>
               <div class="p-5 bg-background/30 border border-border/20 rounded-2xl">
-                <span class="text-xs text-zinc-400 font-medium">Ledger Credit Balances</span>
-                <div class="text-xl font-extrabold text-white mt-1">
+                <span class="text-xs text-zinc-500 font-bold">Ledger Credit Balances</span>
+                <div class="text-xl font-extrabold text-foreground mt-1">
                   {{ reconReport()?.totalLedgerCredits | currency:'PHP':'symbol' }}
                 </div>
               </div>
               <div class="p-5 bg-background/30 border border-border/20 rounded-2xl">
-                <span class="text-xs text-zinc-400 font-medium">Ledger Debit Balances</span>
-                <div class="text-xl font-extrabold text-white mt-1">
+                <span class="text-xs text-zinc-500 font-bold">Ledger Debit Balances</span>
+                <div class="text-xl font-extrabold text-foreground mt-1">
                   {{ reconReport()?.totalLedgerDebits | currency:'PHP':'symbol' }}
                 </div>
               </div>
               <div class="p-5 bg-background/30 border border-border/20 rounded-2xl">
-                <span class="text-xs text-zinc-400 font-medium">Auditing Reconciliation</span>
+                <span class="text-xs text-zinc-500 font-bold">Auditing Reconciliation</span>
                 <div
-                  [class]="reconReport()?.isReconciled ? 'text-emerald-500' : 'text-red-500'"
+                  [class]="reconReport()?.isReconciled ? 'text-emerald-500 dark:text-[#00d47e]' : 'text-red-500'"
                   class="text-xl font-extrabold mt-1 uppercase"
                 >
                   {{ reconReport()?.isReconciled ? 'Reconciled' : 'Discrepancy: ' + (reconReport()?.discrepancy | currency:'PHP':'symbol') }}

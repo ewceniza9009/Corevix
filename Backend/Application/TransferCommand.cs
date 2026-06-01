@@ -119,9 +119,20 @@ namespace Corevix.Application
             _dbContext.Transactions.Add(transaction);
 
             // Double-entry Ledger Entries
+            (string sourceGlCode, string sourceGlName) = sourceAccount.AccountType switch
+            {
+                AccountType.Savings => (GlAccount.SavingsDeposits, "Customer Savings Deposits"),
+                AccountType.Checking => (GlAccount.CheckingDeposits, "Customer Checking Deposits"),
+                AccountType.TimeDeposit => (GlAccount.TimeDeposits, "Customer Time Deposits"),
+                AccountType.Loan => (GlAccount.LoanReceivable, "Customer Loan Receivables"),
+                _ => throw new InvalidOperationException("Unsupported account type.")
+            };
+
             var sourceLedger = new LedgerEntry
             {
                 AccountId = sourceAccount.Id,
+                GlAccountCode = sourceGlCode,
+                GlAccountName = sourceGlName,
                 TransactionId = transaction.Id,
                 Amount = request.Amount,
                 IsDebit = true
@@ -130,14 +141,39 @@ namespace Corevix.Application
 
             if (destinationAccount != null)
             {
+                (string destGlCode, string destGlName) = destinationAccount.AccountType switch
+                {
+                    AccountType.Savings => (GlAccount.SavingsDeposits, "Customer Savings Deposits"),
+                    AccountType.Checking => (GlAccount.CheckingDeposits, "Customer Checking Deposits"),
+                    AccountType.TimeDeposit => (GlAccount.TimeDeposits, "Customer Time Deposits"),
+                    AccountType.Loan => (GlAccount.LoanReceivable, "Customer Loan Receivables"),
+                    _ => throw new InvalidOperationException("Unsupported account type.")
+                };
+
                 var destinationLedger = new LedgerEntry
                 {
                     AccountId = destinationAccount.Id,
+                    GlAccountCode = destGlCode,
+                    GlAccountName = destGlName,
                     TransactionId = transaction.Id,
                     Amount = request.Amount,
                     IsDebit = false
                 };
                 _dbContext.LedgerEntries.Add(destinationLedger);
+            }
+            else
+            {
+                // External Transfer: Credit Central Bank Reserve Account
+                var externalLedger = new LedgerEntry
+                {
+                    AccountId = null,
+                    GlAccountCode = GlAccount.CentralBankReserve,
+                    GlAccountName = "Central Bank Reserve (Interbank Settlement)",
+                    TransactionId = transaction.Id,
+                    Amount = request.Amount,
+                    IsDebit = false
+                };
+                _dbContext.LedgerEntries.Add(externalLedger);
             }
 
             // Queue Domain Event via Outbox

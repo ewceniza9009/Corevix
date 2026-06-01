@@ -6,10 +6,11 @@ import { RouterOutlet } from '@angular/router';
   standalone: true,
   imports: [RouterOutlet],
   template: `
-    <div class="min-h-screen flex items-center justify-center bg-background text-foreground transition-all duration-300">
-      <div class="w-full max-w-md p-8 bg-card border border-border rounded-xl shadow-lg">
-        <router-outlet></router-outlet>
-      </div>
+    <div class="min-h-screen bg-background text-foreground transition-all duration-300 relative overflow-hidden">
+      <!-- Glow effects in background -->
+      <div class="absolute -top-40 -left-40 w-96 h-96 bg-primary/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+      <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-primary-hover/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+      <router-outlet></router-outlet>
     </div>
   `
 })

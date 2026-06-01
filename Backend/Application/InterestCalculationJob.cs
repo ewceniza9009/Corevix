@@ -51,7 +51,28 @@ namespace Corevix.Application
                     Description = $"Daily Savings Interest Accrual at {savingsAnnualRate * 100}% p.a."
                 };
                 _dbContext.Transactions.Add(transaction);
-                _dbContext.LedgerEntries.Add(new LedgerEntry { AccountId = account.Id, TransactionId = transaction.Id, Amount = interestAmount, IsDebit = false });
+                
+                // Debit: Interest Expense
+                _dbContext.LedgerEntries.Add(new LedgerEntry
+                {
+                    AccountId = null,
+                    GlAccountCode = GlAccount.InterestExpense,
+                    GlAccountName = "Interest & Rebate Expense",
+                    TransactionId = transaction.Id,
+                    Amount = interestAmount,
+                    IsDebit = true
+                });
+
+                // Credit: Customer Savings Deposit
+                _dbContext.LedgerEntries.Add(new LedgerEntry
+                {
+                    AccountId = account.Id,
+                    GlAccountCode = GlAccount.SavingsDeposits,
+                    GlAccountName = "Customer Savings Deposits",
+                    TransactionId = transaction.Id,
+                    Amount = interestAmount,
+                    IsDebit = false
+                });
             }
 
             // 2. Loan Interest Charge Accrual (loaded dynamically, default 6.0% p.a. - increases debt)
@@ -85,7 +106,28 @@ namespace Corevix.Application
                     Description = $"Daily Loan Interest Charge at {loanAnnualRate * 100}% p.a."
                 };
                 _dbContext.Transactions.Add(transaction);
-                _dbContext.LedgerEntries.Add(new LedgerEntry { AccountId = loan.Id, TransactionId = transaction.Id, Amount = interestCharge, IsDebit = true });
+
+                // Debit: Customer Loan Receivable
+                _dbContext.LedgerEntries.Add(new LedgerEntry
+                {
+                    AccountId = loan.Id,
+                    GlAccountCode = GlAccount.LoanReceivable,
+                    GlAccountName = "Customer Loan Receivables",
+                    TransactionId = transaction.Id,
+                    Amount = interestCharge,
+                    IsDebit = true
+                });
+
+                // Credit: Interest Income
+                _dbContext.LedgerEntries.Add(new LedgerEntry
+                {
+                    AccountId = null,
+                    GlAccountCode = GlAccount.InterestIncome,
+                    GlAccountName = "Interest Income",
+                    TransactionId = transaction.Id,
+                    Amount = interestCharge,
+                    IsDebit = false
+                });
             }
 
             // 3. Time Deposits Interest Accrual (loaded dynamically, default 4.5% p.a.) & Maturity payouts
@@ -117,7 +159,28 @@ namespace Corevix.Application
                         Description = $"Daily Time Deposit Interest Accrual at {tdAnnualRate * 100}% p.a."
                     };
                     _dbContext.Transactions.Add(transaction);
-                    _dbContext.LedgerEntries.Add(new LedgerEntry { AccountId = td.Id, TransactionId = transaction.Id, Amount = interestAmount, IsDebit = false });
+
+                    // Debit: Interest Expense
+                    _dbContext.LedgerEntries.Add(new LedgerEntry
+                    {
+                        AccountId = null,
+                        GlAccountCode = GlAccount.InterestExpense,
+                        GlAccountName = "Interest & Rebate Expense",
+                        TransactionId = transaction.Id,
+                        Amount = interestAmount,
+                        IsDebit = true
+                    });
+
+                    // Credit: Customer Time Deposit
+                    _dbContext.LedgerEntries.Add(new LedgerEntry
+                    {
+                        AccountId = td.Id,
+                        GlAccountCode = GlAccount.TimeDeposits,
+                        GlAccountName = "Customer Time Deposits",
+                        TransactionId = transaction.Id,
+                        Amount = interestAmount,
+                        IsDebit = false
+                    });
                 }
 
                 // Check Maturity
@@ -146,8 +209,27 @@ namespace Corevix.Application
                         };
                         _dbContext.Transactions.Add(payoutTx);
 
-                        _dbContext.LedgerEntries.Add(new LedgerEntry { AccountId = td.Id, TransactionId = payoutTx.Id, Amount = totalPayout, IsDebit = true });
-                        _dbContext.LedgerEntries.Add(new LedgerEntry { AccountId = savings.Id, TransactionId = payoutTx.Id, Amount = totalPayout, IsDebit = false });
+                        // Debit: Customer Time Deposit (reduces TD liability)
+                        _dbContext.LedgerEntries.Add(new LedgerEntry
+                        {
+                            AccountId = td.Id,
+                            GlAccountCode = GlAccount.TimeDeposits,
+                            GlAccountName = "Customer Time Deposits",
+                            TransactionId = payoutTx.Id,
+                            Amount = totalPayout,
+                            IsDebit = true
+                        });
+
+                        // Credit: Customer Savings Deposit (increases Savings liability)
+                        _dbContext.LedgerEntries.Add(new LedgerEntry
+                        {
+                            AccountId = savings.Id,
+                            GlAccountCode = GlAccount.SavingsDeposits,
+                            GlAccountName = "Customer Savings Deposits",
+                            TransactionId = payoutTx.Id,
+                            Amount = totalPayout,
+                            IsDebit = false
+                        });
                     }
                 }
             }

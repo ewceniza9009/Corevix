@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { ThemeService } from '../../core/services/theme.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -25,14 +26,21 @@ import { ThemeService } from '../../core/services/theme.service';
           </nav>
         </div>
 
-        <div class="p-4 border-t border-border flex items-center justify-between">
-          <span class="text-xs font-medium opacity-70">Theme</span>
-          <button (click)="themeService.toggleTheme()" class="p-2 rounded-lg hover:bg-primary/10 border border-border">
-            @if (themeService.isDarkMode()) {
-              ☀️ Light
-            } @else {
-              🌙 Dark
-            }
+        <div class="p-4 border-t border-border flex flex-col gap-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium opacity-70">Theme</span>
+            <button (click)="themeService.toggleTheme()" class="p-2 rounded-lg hover:bg-primary/10 border border-border text-xs font-semibold">
+              @if (themeService.isDarkMode()) {
+                ☀️ Light
+              } @else {
+                🌙 Dark
+              }
+            </button>
+          </div>
+          
+          <button (click)="logout()" class="w-full flex items-center justify-center gap-2 py-2 px-3 border border-border hover:border-red-500/30 hover:bg-red-500/10 text-red-500 text-xs font-bold rounded-lg transition duration-200">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
+            Sign Out
           </button>
         </div>
       </aside>
@@ -55,4 +63,11 @@ import { ThemeService } from '../../core/services/theme.service';
 })
 export class MainLayoutComponent {
   themeService = inject(ThemeService);
+  authService = inject(AuthService);
+  router = inject(Router);
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/auth/login']);
+  }
 }

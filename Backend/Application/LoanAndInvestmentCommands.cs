@@ -145,6 +145,8 @@ namespace Corevix.Application
             var debitEntry = new LedgerEntry
             {
                 AccountId = loanAccount.Id,
+                GlAccountCode = GlAccount.LoanReceivable,
+                GlAccountName = "Customer Loan Receivables",
                 TransactionId = transaction.Id,
                 Amount = loanAmount,
                 IsDebit = true
@@ -153,6 +155,8 @@ namespace Corevix.Application
             var creditEntry = new LedgerEntry
             {
                 AccountId = targetAccount.Id,
+                GlAccountCode = GlAccount.SavingsDeposits,
+                GlAccountName = "Customer Savings Deposits",
                 TransactionId = transaction.Id,
                 Amount = loanAmount,
                 IsDebit = false
@@ -224,9 +228,18 @@ namespace Corevix.Application
 
             _dbContext.Transactions.Add(transaction);
 
+            (string sourceGlCode, string sourceGlName) = sourceAccount.AccountType switch
+            {
+                AccountType.Savings => (GlAccount.SavingsDeposits, "Customer Savings Deposits"),
+                AccountType.Checking => (GlAccount.CheckingDeposits, "Customer Checking Deposits"),
+                _ => (GlAccount.SavingsDeposits, "Customer Savings Deposits")
+            };
+
             var debitEntry = new LedgerEntry
             {
                 AccountId = sourceAccount.Id,
+                GlAccountCode = sourceGlCode,
+                GlAccountName = sourceGlName,
                 TransactionId = transaction.Id,
                 Amount = request.Amount,
                 IsDebit = true
@@ -235,6 +248,8 @@ namespace Corevix.Application
             var creditEntry = new LedgerEntry
             {
                 AccountId = tdAccount.Id,
+                GlAccountCode = GlAccount.TimeDeposits,
+                GlAccountName = "Customer Time Deposits",
                 TransactionId = transaction.Id,
                 Amount = request.Amount,
                 IsDebit = false

@@ -39,6 +39,8 @@
 }
 
 @theme {
+  --font-sans: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
   --color-primary: var(--color-primary);
   --color-primary-hover: var(--color-primary-hover);
   --color-background: var(--color-background);
@@ -47,11 +49,14 @@
   --color-border: var(--color-border);
 }
 
+body, input, select, textarea, button {
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;
+}
+
 body {
   position: relative;
   background-color: var(--color-background);
   color: var(--color-foreground);
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   margin: 0;
   min-height: 100vh;
   transition: background-color 0.3s ease, color 0.3s ease;

@@ -80,15 +80,37 @@ namespace Corevix.Application
 
             _dbContext.Transactions.Add(transaction);
 
-            // Double-entry: Debit source account
+            // Double-entry: Debit source account, Credit Biller Clearing
+            (string sourceGlCode, string sourceGlName) = sourceAccount.AccountType switch
+            {
+                AccountType.Savings => (GlAccount.SavingsDeposits, "Customer Savings Deposits"),
+                AccountType.Checking => (GlAccount.CheckingDeposits, "Customer Checking Deposits"),
+                AccountType.TimeDeposit => (GlAccount.TimeDeposits, "Customer Time Deposits"),
+                AccountType.Loan => (GlAccount.LoanReceivable, "Customer Loan Receivables"),
+                _ => throw new InvalidOperationException("Unsupported account type.")
+            };
+
             var sourceLedger = new LedgerEntry
             {
                 AccountId = sourceAccount.Id,
+                GlAccountCode = sourceGlCode,
+                GlAccountName = sourceGlName,
                 TransactionId = transaction.Id,
                 Amount = request.Amount,
                 IsDebit = true
             };
             _dbContext.LedgerEntries.Add(sourceLedger);
+
+            var billerLedger = new LedgerEntry
+            {
+                AccountId = null,
+                GlAccountCode = GlAccount.BillerClearing,
+                GlAccountName = "Biller Settlement Clearing",
+                TransactionId = transaction.Id,
+                Amount = request.Amount,
+                IsDebit = false
+            };
+            _dbContext.LedgerEntries.Add(billerLedger);
 
             // Calculate Cash Rebate dynamically (default 1.0%)
             decimal rebateRate = 0.01m;
@@ -112,7 +134,31 @@ namespace Corevix.Application
                     Description = $"{rebateRate * 100}% Bill Payment Rebate - Biller: {request.BillerCode.ToUpperInvariant()}"
                 };
                 _dbContext.Transactions.Add(rebateTx);
-                _dbContext.LedgerEntries.Add(new LedgerEntry { AccountId = sourceAccount.Id, TransactionId = rebateTx.Id, Amount = rebateAmount, IsDebit = false });
+
+                // Debit Interest & Rebate Expense
+                var rebateDebit = new LedgerEntry
+                {
+                    AccountId = null,
+                    GlAccountCode = GlAccount.InterestExpense,
+                    GlAccountName = "Interest & Rebate Expense",
+                    TransactionId = rebateTx.Id,
+                    Amount = rebateAmount,
+                    IsDebit = true
+                };
+
+                // Credit Customer Deposit
+                var rebateCredit = new LedgerEntry
+                {
+                    AccountId = sourceAccount.Id,
+                    GlAccountCode = sourceGlCode,
+                    GlAccountName = sourceGlName,
+                    TransactionId = rebateTx.Id,
+                    Amount = rebateAmount,
+                    IsDebit = false
+                };
+
+                _dbContext.LedgerEntries.Add(rebateDebit);
+                _dbContext.LedgerEntries.Add(rebateCredit);
             }
 
             // Queue Domain Event via Outbox

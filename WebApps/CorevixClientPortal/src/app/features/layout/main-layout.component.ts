@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { ThemeService } from '../../core/services/theme.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -34,7 +35,7 @@ import { ThemeService } from '../../core/services/theme.service';
               @if (!isCollapsed()) { <span class="animate-fade-in">My Accounts</span> }
             </a>
             <a routerLink="/transfers" routerLinkActive="bg-gradient-to-r from-primary/10 to-indigo-500/5 text-primary border-l-2 border-primary" [class.justify-center]="isCollapsed()" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-slate-200/50 dark:hover:bg-white/5 transition-all duration-200" title="Send Money">
-              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4m-4-4l4-4" /></svg>
               @if (!isCollapsed()) { <span class="animate-fade-in">Send Money</span> }
             </a>
             <a routerLink="/bills" routerLinkActive="bg-gradient-to-r from-primary/10 to-indigo-500/5 text-primary border-l-2 border-primary" [class.justify-center]="isCollapsed()" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-zinc-500 dark:text-zinc-400 hover:text-foreground hover:bg-slate-200/50 dark:hover:bg-white/5 transition-all duration-200" title="Pay Bills">
@@ -52,28 +53,6 @@ import { ThemeService } from '../../core/services/theme.service';
           </nav>
         </div>
 
-        <!-- Sidebar Footer Info -->
-        <div class="p-4 border-t border-border/20 flex flex-col gap-3 overflow-hidden">
-          <div class="flex items-center justify-between">
-            @if (!isCollapsed()) {
-              <span class="text-xs font-semibold text-zinc-500 animate-fade-in">Theme</span>
-            }
-            <button (click)="themeService.toggleTheme()" class="p-2 rounded-xl bg-card hover:bg-slate-200 dark:hover:bg-[#1a253f] border border-border/30 text-zinc-400 hover:text-foreground transition duration-200 flex items-center justify-center" [class.w-full]="isCollapsed()">
-              @if (themeService.isDarkMode()) {
-                ☀️ @if (!isCollapsed()) { <span class="ml-2 text-xs font-bold animate-fade-in">Light</span> }
-              } @else {
-                🌙 @if (!isCollapsed()) { <span class="ml-2 text-xs font-bold animate-fade-in">Dark</span> }
-              }
-            </button>
-          </div>
-          
-          <div class="flex items-center gap-2 shrink-0">
-            <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></div>
-            @if (!isCollapsed()) {
-              <span class="text-xs font-semibold text-zinc-500 animate-fade-in">Secure Connection</span>
-            }
-          </div>
-        </div>
       </aside>
 
       <!-- Main Panel (Floating Content Area) -->
@@ -99,6 +78,12 @@ import { ThemeService } from '../../core/services/theme.service';
               } @else {
                 🌙 <span class="ml-2 text-xs font-bold hidden sm:inline">Dark Mode</span>
               }
+            </button>
+
+            <!-- Sign Out Button -->
+            <button (click)="logout()" class="p-2 rounded-xl bg-card hover:bg-red-500/10 border border-border/30 hover:border-red-500/30 text-zinc-400 hover:text-red-500 transition duration-200 flex items-center justify-center" title="Sign Out">
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
+              <span class="ml-2 text-xs font-bold hidden sm:inline">Sign Out</span>
             </button>
 
             <!-- Mock notifications -->
@@ -129,10 +114,17 @@ import { ThemeService } from '../../core/services/theme.service';
 })
 export class MainLayoutComponent {
   themeService = inject(ThemeService);
+  authService = inject(AuthService);
+  router = inject(Router);
   isCollapsed = signal(false);
 
   toggleSidebar() {
     this.isCollapsed.update(val => !val);
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/auth/login']);
   }
 }
 

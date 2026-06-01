@@ -76,10 +76,13 @@ namespace Corevix.Persistence
             modelBuilder.Entity<LedgerEntry>(entity =>
             {
                 entity.Property(l => l.Amount).HasPrecision(18, 2);
+                entity.Property(l => l.GlAccountCode).IsRequired().HasMaxLength(10);
+                entity.Property(l => l.GlAccountName).IsRequired().HasMaxLength(100);
                 
                 entity.HasOne(l => l.Account)
                       .WithMany(a => a.LedgerEntries)
                       .HasForeignKey(l => l.AccountId)
+                      .IsRequired(false)
                       .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(l => l.Transaction)

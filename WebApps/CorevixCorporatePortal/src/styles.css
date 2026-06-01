@@ -1,49 +1,375 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 @source "./**/*.{html,ts}";
 
-@theme {
-  --color-primary: #1e40af;
-  --color-primary-hover: #1d4ed8;
-  --color-background: #f8fafc;
-  --color-foreground: #0f172a;
-  --color-card: #ffffff;
-  --color-border: #e2e8f0;
-}
-
 :root {
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(226, 232, 240, 0.8);
-  --glass-blur: blur(16px);
+  --color-primary: #025864;
+  --color-primary-hover: #013f47;
+  --color-accent: #00d47e;
+  --color-accent-hover: #00e88a;
+  --color-background: #ebeff2;
+  --color-foreground: #0f1e21;
+  --color-card: #ffffff;
+  --color-border: #e2e7ec;
+  --color-muted: #64748b;
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: #e2e7ec;
+  --glass-blur: blur(12px);
+  --card-shadow: 0 4px 20px -2px rgba(15, 30, 33, 0.05), 0 1px 3px rgba(15, 30, 33, 0.02);
+  --btn-shadow: 0 1px 3px rgba(2, 88, 100, 0.12), 0 1px 2px rgba(2, 88, 100, 0.06);
+  --btn-shadow-hover: 0 4px 12px rgba(2, 88, 100, 0.18), 0 2px 4px rgba(2, 88, 100, 0.1);
 }
 
 .dark {
-  --color-primary: #3b82f6;
-  --color-primary-hover: #60a5fa;
-  --color-background: #0b0f19;
-  --color-foreground: #f1f5f9;
-  --color-card: #111827;
-  --color-border: #1f2937;
-  --glass-bg: rgba(15, 23, 42, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --color-primary: #00d47e;
+  --color-primary-hover: #00b068;
+  --color-accent: #025864;
+  --color-accent-hover: #037a8a;
+  --color-background: #081012;
+  --color-foreground: #e6f3f5;
+  --color-card: #0c181a;
+  --color-border: #14272b;
+  --color-muted: #94a3b8;
+  --glass-bg: rgba(12, 24, 26, 0.8);
+  --glass-border: #14272b;
   --glass-blur: blur(20px);
+  --card-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+  --btn-shadow: 0 1px 3px rgba(0, 212, 126, 0.1), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --btn-shadow-hover: 0 4px 12px rgba(0, 212, 126, 0.15), 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-foreground);
+  --color-card: var(--color-card);
+  --color-border: var(--color-border);
+}
+
+body, input, select, textarea, button {
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;
 }
 
 body {
+  position: relative;
   background-color: var(--color-background);
   color: var(--color-foreground);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   margin: 0;
+  min-height: 100vh;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.glass-card {
+/* ======================================================================
+   FULL-VIEWPORT AMBIENT BACKDROP ORBS — Fixed, covers entire screen
+   ====================================================================== */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(150px);
+  opacity: 0.18;
+  transition: opacity 0.5s ease, background 0.5s ease;
+}
+
+body::before {
+  top: -15%;
+  left: 10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(2, 88, 100, 0.5) 0%, rgba(0, 212, 126, 0.3) 100%);
+}
+
+body::after {
+  bottom: -10%;
+  right: 5%;
+  width: 550px;
+  height: 550px;
+  background: radial-gradient(circle, rgba(0, 212, 126, 0.4) 0%, rgba(2, 88, 100, 0.2) 100%);
+}
+
+.dark body::before {
+  opacity: 0.1;
+  background: radial-gradient(circle, rgba(0, 212, 126, 0.3) 0%, rgba(2, 88, 100, 0.15) 100%);
+}
+
+.dark body::after {
+  opacity: 0.06;
+  background: radial-gradient(circle, rgba(2, 88, 100, 0.25) 0%, rgba(0, 212, 126, 0.1) 100%);
+}
+
+/* ======================================================================
+   PREMIUM BUTTON DESIGN SYSTEM — Uniform sizing, professional palette
+   ====================================================================== */
+
+/* Base button reset — all buttons get this foundation */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  height: 2.5rem; /* 40px — h-10 */
+  padding-left: 1rem;
+  padding-right: 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-user-select: none;
+  user-select: none;
+  outline: none;
+}
+
+.btn:hover {
+  transform: scale(1.015);
+}
+
+.btn:active {
+  transform: scale(0.985);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+/* PRIMARY — Deep teal / Accent green depending on theme */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+  box-shadow: var(--btn-shadow);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  box-shadow: var(--btn-shadow-hover);
+}
+
+.dark .btn-primary {
+  background-color: #00d47e;
+  color: #025864;
+}
+
+.dark .btn-primary:hover {
+  background-color: #00e88a;
+}
+
+/* SECONDARY — Outlined, neutral */
+.btn-secondary {
+  background-color: transparent;
+  color: var(--color-muted);
+  border-color: var(--color-border);
+}
+
+.btn-secondary:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+  color: var(--color-foreground);
+  border-color: var(--color-primary);
+}
+
+.dark .btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+/* ACCENT — Bright teal-green action button */
+.btn-accent {
+  background-color: #00d47e;
+  color: #025864;
+  box-shadow: 0 1px 3px rgba(0, 212, 126, 0.15);
+}
+
+.btn-accent:hover {
+  background-color: #00e88a;
+  box-shadow: 0 4px 12px rgba(0, 212, 126, 0.2);
+}
+
+/* GHOST — Invisible until hovered */
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-muted);
+  border-color: transparent;
+}
+
+.btn-ghost:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  color: var(--color-foreground);
+}
+
+.dark .btn-ghost:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* DANGER — Contextual destructive, but still professional (soft) */
+.btn-danger {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.15);
+}
+
+.btn-danger:hover {
+  background-color: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+/* SIZE: Icon-only square button */
+.btn-icon {
+  width: 2.5rem;
+  padding: 0;
+}
+
+/* SIZE: Full-width block */
+.btn-block {
+  width: 100%;
+}
+
+/* SIZE: Compact for inline contexts */
+.btn-sm {
+  height: 2rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  font-size: 0.6875rem;
+  border-radius: 0.5rem;
+}
+
+.btn-sm svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* ======================================================================
+   GLASS PANELS
+   ====================================================================== */
+.glass-panel, .glass-card {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--card-shadow);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.dark .glass-card {
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+/* ======================================================================
+   FORM INPUT UNIFORMITY
+   ====================================================================== */
+.input {
+  width: 100%;
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background-color: var(--color-card);
+  color: var(--color-foreground);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(2, 88, 100, 0.08);
+}
+
+.dark .input:focus {
+  box-shadow: 0 0 0 3px rgba(0, 212, 126, 0.08);
+}
+
+.input::placeholder {
+  color: var(--color-muted);
+  opacity: 0.6;
+}
+
+/* ======================================================================
+   ALERT / TOAST BOXES
+   ====================================================================== */
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.alert svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.alert-error {
+  background-color: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.alert-success {
+  background-color: rgba(0, 212, 126, 0.06);
+  border-color: rgba(0, 212, 126, 0.15);
+  color: #00d47e;
+}
+
+/* ======================================================================
+   SCROLLBAR
+   ====================================================================== */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+/* ======================================================================
+   ANIMATIONS
+   ====================================================================== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

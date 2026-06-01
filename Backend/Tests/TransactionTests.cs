@@ -149,9 +149,16 @@ namespace Corevix.Tests
             Assert.Equal(700.00m, updatedAcc!.Balance);
 
             var ledgerEntries = await dbContext.LedgerEntries.Where(l => l.TransactionId == txId).ToListAsync();
-            Assert.Single(ledgerEntries);
-            Assert.True(ledgerEntries[0].IsDebit);
-            Assert.Equal(300.00m, ledgerEntries[0].Amount);
+            Assert.Equal(2, ledgerEntries.Count);
+            
+            var debit = ledgerEntries.Single(l => l.IsDebit);
+            Assert.Equal(300.00m, debit.Amount);
+            Assert.Equal(acc.Id, debit.AccountId);
+
+            var credit = ledgerEntries.Single(l => !l.IsDebit);
+            Assert.Equal(300.00m, credit.Amount);
+            Assert.Null(credit.AccountId);
+            Assert.Equal(GlAccount.CentralBankReserve, credit.GlAccountCode);
         }
 
         [Fact]
@@ -181,9 +188,17 @@ namespace Corevix.Tests
             var updatedAcc = await dbContext.Accounts.FindAsync(acc.Id);
             Assert.Equal(851.50m, updatedAcc!.Balance); // 1000 - 150 + 1.50 (1% rebate)
 
-            var ledger = await dbContext.LedgerEntries.SingleAsync(l => l.TransactionId == txId);
-            Assert.True(ledger.IsDebit);
-            Assert.Equal(150.00m, ledger.Amount);
+            var ledgerEntries = await dbContext.LedgerEntries.Where(l => l.TransactionId == txId).ToListAsync();
+            Assert.Equal(2, ledgerEntries.Count);
+
+            var debit = ledgerEntries.Single(l => l.IsDebit);
+            Assert.Equal(150.00m, debit.Amount);
+            Assert.Equal(acc.Id, debit.AccountId);
+
+            var credit = ledgerEntries.Single(l => !l.IsDebit);
+            Assert.Equal(150.00m, credit.Amount);
+            Assert.Null(credit.AccountId);
+            Assert.Equal(GlAccount.BillerClearing, credit.GlAccountCode);
 
             var outbox = await dbContext.OutboxMessages.FirstOrDefaultAsync();
             Assert.NotNull(outbox);
